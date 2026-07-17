@@ -1,9 +1,10 @@
 import { redirect } from "next/navigation";
 
-import { initProfile, getFirstServer } from "@/lib/query";
+import { OnboardingWizard } from "@/components/onboarding/onboarding-wizard";
 import { prisma } from "@/lib/prismadb";
+import { initProfile } from "@/lib/query";
 
-export default async function Home() {
+export default async function OnboardingPage() {
 	const profile = await initProfile();
 	if (!profile || !("id" in profile)) return null;
 
@@ -13,12 +14,8 @@ export default async function Home() {
 	});
 
 	if (membership && profile.onboardingComplete) {
-		await getFirstServer(profile.id);
+		redirect(`/servers/${membership.serverId}`);
 	}
 
-	if (!membership || !profile.onboardingComplete) {
-		redirect("/onboarding");
-	}
-
-	return null;
+	return <OnboardingWizard />;
 }
