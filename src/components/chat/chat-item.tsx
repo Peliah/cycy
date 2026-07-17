@@ -1,5 +1,6 @@
 "use client";
 
+import { ChatMarkdown } from "@/components/chat/chat-markdown";
 import { ActionTooltip } from "@/components/ui/action-tooltip";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
@@ -157,17 +158,23 @@ export function ChatItem({
 						</a>
 					)}
 					{!fileUrl && !isEditing && (
-						<p
+						<div
 							className={cn(
-								"text-sm text-foreground/90",
-								deleted && "mt-1 text-xs italic text-shell-muted",
+								"text-foreground/90",
+								deleted && "mt-1 italic text-shell-muted",
 							)}
 						>
-							{content}
-							{isUpdated && !deleted && (
-								<span className="ml-1 text-[10px] text-shell-muted">(edited)</span>
+							{deleted ? (
+								<span className="text-xs">{content}</span>
+							) : (
+								<ChatMarkdown content={content} />
 							)}
-						</p>
+							{isUpdated && !deleted && (
+								<span className="ml-1 text-[10px] text-shell-muted">
+									(edited)
+								</span>
+							)}
+						</div>
 					)}
 					{!fileUrl && isEditing && (
 						<Form {...form}>
