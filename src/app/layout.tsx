@@ -5,14 +5,12 @@ import { QueryProvider } from "@/contexts/query-provider";
 import { SocketProvider } from "@/contexts/socket-provider";
 import { ThemeProvider } from "@/contexts/theme-provider";
 import { clerkAppearance } from "@/lib/clerk-appearance";
+import { figtree, fraunces } from "@/lib/fonts";
 import { cn } from "@/lib/utils";
 import { ClerkProvider } from "@clerk/nextjs";
 import { NextSSRPlugin } from "@uploadthing/react/next-ssr-plugin";
 import type { Metadata } from "next";
-import { Open_Sans } from "next/font/google";
 import { extractRouterConfig } from "uploadthing/server";
-
-const open_sans = Open_Sans({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
 	title: "Cycy",
@@ -28,8 +26,16 @@ export default function RootLayout({
 	children: React.ReactNode;
 }>) {
 	return (
-		<html lang="en" className="scroll-smooth" suppressHydrationWarning>
-			<body className={cn(open_sans.className, "bg-white dark:bg-[#313338]")}>
+		<html
+			lang="en"
+			className={cn(
+				"scroll-smooth",
+				figtree.variable,
+				fraunces.variable,
+			)}
+			suppressHydrationWarning
+		>
+			<body className="bg-background font-sans text-foreground antialiased">
 				<ClerkProvider appearance={clerkAppearance}>
 					<ThemeProvider
 						attribute="class"

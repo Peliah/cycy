@@ -1,19 +1,7 @@
 import type { Metadata } from "next";
-import { Figtree, Fraunces } from "next/font/google";
 import Image from "next/image";
 
 import { ThemeProvider } from "@/contexts/theme-provider";
-import { cn } from "@/lib/utils";
-
-const figtree = Figtree({
-	subsets: ["latin"],
-	variable: "--font-figtree",
-});
-
-const fraunces = Fraunces({
-	subsets: ["latin"],
-	variable: "--font-fraunces",
-});
 
 export const metadata: Metadata = {
 	title: "Cycy — Sign in",
@@ -29,13 +17,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 			storageKey="cycy-auth-theme"
 			disableTransitionOnChange
 		>
-			<div
-				className={cn(
-					figtree.variable,
-					fraunces.variable,
-					"min-h-screen bg-[#F4F8F7] font-[family-name:var(--font-figtree)] text-[#14201F] antialiased",
-				)}
-			>
+			<div className="min-h-screen bg-[#F4F8F7] font-sans text-[#14201F] antialiased">
 				<div className="grid min-h-screen lg:grid-cols-2">
 					<aside className="relative hidden flex-col justify-between overflow-hidden bg-[#0A4D4A] px-8 py-10 text-[#E8F2F1] lg:flex lg:px-14 lg:py-14">
 						<div
@@ -62,13 +44,13 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 								className="size-10 brightness-0 invert"
 								priority
 							/>
-							<span className="font-[family-name:var(--font-fraunces)] text-2xl tracking-tight text-white">
+							<span className="font-display text-2xl tracking-tight text-white">
 								Cycy
 							</span>
 						</div>
 
 						<div className="relative z-10 max-w-md space-y-4">
-							<h1 className="font-[family-name:var(--font-fraunces)] text-4xl leading-[1.15] tracking-tight text-white sm:text-5xl">
+							<h1 className="font-display text-4xl leading-[1.15] tracking-tight text-white sm:text-5xl">
 								Study together.
 								<br />
 								Finish with proof.
@@ -102,7 +84,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 									className="size-7"
 									priority
 								/>
-								<span className="font-[family-name:var(--font-fraunces)] text-xl text-[#0A4D4A]">
+								<span className="font-display text-xl text-[#0A4D4A]">
 									Cycy
 								</span>
 							</div>

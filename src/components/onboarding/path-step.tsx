@@ -26,7 +26,7 @@ export function PathStep({ onSelectCreate, onSelectJoin }: PathStepProps) {
 					<span className="flex size-11 items-center justify-center rounded-xl bg-[#0A4D4A]/10 text-[#0A4D4A] transition-colors group-hover:bg-[#0A4D4A] group-hover:text-white">
 						<Users className="size-5" />
 					</span>
-					<span className="mt-5 block font-[family-name:var(--font-fraunces)] text-2xl text-[#14201F]">
+					<span className="mt-5 block font-display text-2xl text-[#14201F]">
 						Create a group
 					</span>
 					<span className="mt-2 block text-sm leading-relaxed text-[#5C6B69]">
@@ -42,7 +42,7 @@ export function PathStep({ onSelectCreate, onSelectJoin }: PathStepProps) {
 					<span className="flex size-11 items-center justify-center rounded-xl bg-[#0A4D4A]/10 text-[#0A4D4A] transition-colors group-hover:bg-[#0A4D4A] group-hover:text-white">
 						<UserPlus className="size-5" />
 					</span>
-					<span className="mt-5 block font-[family-name:var(--font-fraunces)] text-2xl text-[#14201F]">
+					<span className="mt-5 block font-display text-2xl text-[#14201F]">
 						Join a group
 					</span>
 					<span className="mt-2 block text-sm leading-relaxed text-[#5C6B69]">

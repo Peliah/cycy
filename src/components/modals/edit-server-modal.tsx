@@ -78,14 +78,16 @@ export function EditServerModal() {
 	return (
 		<Dialog open={isModelOpen} onOpenChange={(open) => !open && handleClose()}>
 			<DialogContent
-				className="bg-white text-black p-0 overflow-hidden"
+				className="overflow-hidden bg-shell-chat p-0 text-foreground"
 				onPointerDownOutside={(event) => isUploading && event.preventDefault()}
 				onInteractOutside={(event) => isUploading && event.preventDefault()}
 			>
-				<DialogHeader className="pt-8 px-6">
-					<DialogTitle className="text-2xl text-center font-bold">Edit your server</DialogTitle>
-					<DialogDescription className="text-center text-zinc-500">
-						Update your server name and icon.
+				<DialogHeader className="px-6 pt-8">
+					<DialogTitle className="text-center text-2xl font-bold">
+						Edit your group
+					</DialogTitle>
+					<DialogDescription className="text-center text-shell-muted">
+						Update your group name and icon.
 					</DialogDescription>
 				</DialogHeader>
 				<Form {...form}>
@@ -118,14 +120,14 @@ export function EditServerModal() {
 								name="name"
 								render={({ field }) => (
 									<FormItem>
-										<FormLabel className="uppercase text-xs font-bold text-zinc-500">
-											Server name
+										<FormLabel className="text-xs font-bold uppercase text-shell-muted">
+											Group name
 										</FormLabel>
 										<FormControl>
 											<Input
 												disabled={isLoading}
-												className="bg-zinc-300/50 border-0 focus-visible:ring-0 text-black focus-visible:ring-offset-0"
-												placeholder="Enter server name"
+												className="border-shell-border bg-shell-nav text-foreground focus-visible:ring-shell-accent"
+												placeholder="Enter group name"
 												{...field}
 											/>
 										</FormControl>
@@ -134,7 +136,7 @@ export function EditServerModal() {
 								)}
 							/>
 						</div>
-						<DialogFooter className="bg-gray-100 px-6 py-4">
+						<DialogFooter className="bg-shell-nav px-6 py-4">
 							<Button
 								type="submit"
 								variant="primary"

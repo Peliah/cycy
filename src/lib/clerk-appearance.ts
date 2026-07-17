@@ -3,6 +3,7 @@ export const clerkAppearance = {
 	variables: {
 		colorPrimary: "#0A4D4A",
 		colorTextOnPrimaryBackground: "#FFFFFF",
+		fontFamily: "var(--font-figtree), ui-sans-serif, system-ui, sans-serif",
 	},
 };
 
@@ -21,6 +22,7 @@ export const authClerkAppearance = {
 		colorNeutral: "#14201F",
 		colorDanger: "#DC2626",
 		borderRadius: "0.5rem",
+		fontFamily: "var(--font-figtree), ui-sans-serif, system-ui, sans-serif",
 	},
 	elements: {
 		rootBox: "!w-full !max-w-full",

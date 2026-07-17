@@ -12,11 +12,13 @@ export  function MobileToggle({serverId}: {serverId: string}) {
           <Menu />
         </Button>
       </SheetTrigger>
-      <SheetContent side="left" className='p-0 flex gap-0'>
-        <div className='w-[72px]'>
+      <SheetContent side="left" className="flex gap-0 border-shell-border bg-shell-nav p-0">
+        <div className="w-[72px]">
           <SideBar />
         </div>
-        <ServerSideBar serverId={serverId} />
+        <div className="w-60">
+          <ServerSideBar serverId={serverId} />
+        </div>
       </SheetContent>
     </Sheet>
   )

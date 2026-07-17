@@ -4,6 +4,9 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+	--font-sans: var(--font-figtree), ui-sans-serif, system-ui, sans-serif;
+	--font-display: var(--font-fraunces), ui-serif, Georgia, "Times New Roman", serif;
+
 	--color-border: hsl(var(--border));
 	--color-input: hsl(var(--input));
 	--color-ring: hsl(var(--ring));
@@ -30,6 +33,16 @@
 
 	--color-card: hsl(var(--card));
 	--color-card-foreground: hsl(var(--card-foreground));
+
+	--color-shell-rail: hsl(var(--shell-rail));
+	--color-shell-nav: hsl(var(--shell-nav));
+	--color-shell-chat: hsl(var(--shell-chat));
+	--color-shell-border: hsl(var(--shell-border));
+	--color-shell-muted: hsl(var(--shell-muted));
+	--color-shell-accent: hsl(var(--shell-accent));
+	--color-shell-accent-foreground: hsl(var(--shell-accent-foreground));
+	--color-shell-hover: hsl(var(--shell-hover));
+	--color-shell-active: hsl(var(--shell-active));
 
 	--radius-lg: var(--radius);
 	--radius-md: calc(var(--radius) - 2px);
@@ -65,65 +78,86 @@ body,
 
 @layer base {
 	:root {
-		--background: 0 0% 100%;
-		--foreground: 20 14.3% 4.1%;
+		/* Cycy teal #0A4D4A ≈ hsl(177 77% 17%) */
+		--background: 160 20% 98%;
+		--foreground: 168 22% 10%;
 
 		--card: 0 0% 100%;
-		--card-foreground: 20 14.3% 4.1%;
+		--card-foreground: 168 22% 10%;
 
 		--popover: 0 0% 100%;
-		--popover-foreground: 20 14.3% 4.1%;
+		--popover-foreground: 168 22% 10%;
 
-		--primary: 24 9.8% 10%;
-		--primary-foreground: 60 9.1% 97.8%;
+		--primary: 177 77% 17%;
+		--primary-foreground: 0 0% 100%;
 
-		--secondary: 60 4.8% 95.9%;
-		--secondary-foreground: 24 9.8% 10%;
+		--secondary: 160 25% 94%;
+		--secondary-foreground: 177 77% 17%;
 
-		--muted: 60 4.8% 95.9%;
-		--muted-foreground: 25 5.3% 44.7%;
+		--muted: 160 20% 94%;
+		--muted-foreground: 168 10% 39%;
 
-		--accent: 60 4.8% 95.9%;
-		--accent-foreground: 24 9.8% 10%;
+		--accent: 160 25% 94%;
+		--accent-foreground: 177 77% 17%;
 
 		--destructive: 0 84.2% 60.2%;
-		--destructive-foreground: 60 9.1% 97.8%;
+		--destructive-foreground: 0 0% 100%;
 
-		--border: 20 5.9% 90%;
-		--input: 20 5.9% 90%;
-		--ring: 20 14.3% 4.1%;
+		--border: 168 18% 80%;
+		--input: 168 18% 80%;
+		--ring: 177 77% 17%;
+
+		--shell-rail: 168 18% 90%;
+		--shell-nav: 160 25% 96%;
+		--shell-chat: 0 0% 100%;
+		--shell-border: 168 18% 80%;
+		--shell-muted: 168 10% 39%;
+		--shell-accent: 177 77% 17%;
+		--shell-accent-foreground: 0 0% 100%;
+		--shell-hover: 168 25% 92%;
+		--shell-active: 177 40% 90%;
 
 		--radius: 0.5rem;
 	}
 
 	.dark {
-		--background: 20 14.3% 4.1%;
-		--foreground: 60 9.1% 97.8%;
+		--background: 177 25% 8%;
+		--foreground: 160 15% 96%;
 
-		--card: 20 14.3% 4.1%;
-		--card-foreground: 60 9.1% 97.8%;
+		--card: 177 22% 10%;
+		--card-foreground: 160 15% 96%;
 
-		--popover: 20 14.3% 4.1%;
-		--popover-foreground: 60 9.1% 97.8%;
+		--popover: 177 22% 10%;
+		--popover-foreground: 160 15% 96%;
 
-		--primary: 60 9.1% 97.8%;
-		--primary-foreground: 24 9.8% 10%;
+		--primary: 168 45% 48%;
+		--primary-foreground: 177 40% 8%;
 
-		--secondary: 12 6.5% 15.1%;
-		--secondary-foreground: 60 9.1% 97.8%;
+		--secondary: 177 18% 14%;
+		--secondary-foreground: 160 15% 96%;
 
-		--muted: 12 6.5% 15.1%;
-		--muted-foreground: 24 5.4% 63.9%;
+		--muted: 177 18% 14%;
+		--muted-foreground: 168 12% 62%;
 
-		--accent: 12 6.5% 15.1%;
-		--accent-foreground: 60 9.1% 97.8%;
+		--accent: 177 18% 14%;
+		--accent-foreground: 160 15% 96%;
 
-		--destructive: 0 62.8% 30.6%;
-		--destructive-foreground: 60 9.1% 97.8%;
+		--destructive: 0 62.8% 40%;
+		--destructive-foreground: 0 0% 100%;
 
-		--border: 12 6.5% 15.1%;
-		--input: 12 6.5% 15.1%;
-		--ring: 24 5.7% 82.9%;
+		--border: 177 16% 18%;
+		--input: 177 16% 18%;
+		--ring: 168 45% 48%;
+
+		--shell-rail: 177 28% 7%;
+		--shell-nav: 177 22% 11%;
+		--shell-chat: 177 18% 13%;
+		--shell-border: 177 16% 18%;
+		--shell-muted: 168 12% 62%;
+		--shell-accent: 168 45% 48%;
+		--shell-accent-foreground: 177 40% 8%;
+		--shell-hover: 177 18% 16%;
+		--shell-active: 177 30% 18%;
 	}
 }
 

@@ -46,14 +46,14 @@ export function CreateServerFormFields({
 				name="name"
 				render={({ field }) => (
 					<FormItem>
-						<FormLabel className="uppercase text-xs font-bold text-zinc-500">
-							Server name
+						<FormLabel className="text-xs font-bold uppercase text-shell-muted">
+							Group name
 						</FormLabel>
 						<FormControl>
 							<Input
 								disabled={isSubmitting}
-								className="bg-zinc-300/50 border-0 focus-visible:ring-0 text-black focus-visible:ring-offset-0"
-								placeholder="Enter server name"
+								className="border-shell-border bg-shell-nav text-foreground focus-visible:ring-shell-accent"
+								placeholder="Enter group name"
 								autoFocus
 								{...field}
 							/>

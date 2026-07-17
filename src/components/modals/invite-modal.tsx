@@ -46,24 +46,29 @@ export function InviteModal() {
 
 	return (
 		<Dialog open={isModelOpen} onOpenChange={onClose}>
-			<DialogContent aria-describedby={undefined} className="bg-white text-black p-0 overflow-hidden">
-				<DialogHeader className="pt-8 px-6">
-					<DialogTitle className="text-2xl text-center font-bold">Invite Friends</DialogTitle>
+			<DialogContent
+				aria-describedby={undefined}
+				className="overflow-hidden bg-shell-chat p-0 text-foreground"
+			>
+				<DialogHeader className="px-6 pt-8">
+					<DialogTitle className="text-center text-2xl font-bold">
+						Invite people
+					</DialogTitle>
 				</DialogHeader>
 				<div className="p-6">
-					<Label className="uppercase text-xs font-bold text-zinc-500 dark:text-secondary/70">
-						Server invite link
+					<Label className="text-xs font-bold uppercase text-shell-muted">
+						Group invite link
 					</Label>
-					<div className="flex items-center mt-2 gap-x-2">
+					<div className="mt-2 flex items-center gap-x-2">
 						<Input
 							aria-readonly
 							readOnly
 							disabled={isLoading}
-							className="bg-zinc-300/50 border-0 focus-visible:ring-0 text-black focus-visible:ring-offset-0"
+							className="border-shell-border bg-shell-nav text-foreground focus-visible:ring-shell-accent"
 							value={inviteUrl}
 						/>
-						<Button disabled={isLoading} onClick={onCopy} size="icon">
-							{copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+						<Button disabled={isLoading} onClick={onCopy} size="icon" variant="primary">
+							{copied ? <Check className="size-4" /> : <Copy className="size-4" />}
 						</Button>
 					</div>
 					<Button
@@ -71,10 +76,10 @@ export function InviteModal() {
 						disabled={isLoading}
 						variant="link"
 						size="sm"
-						className="text-sm text-zinc-500 mt-4"
+						className="mt-4 text-sm text-shell-muted"
 					>
 						Generate a new link
-						<RefreshCw className="w-4 h-4 ml-2" />
+						<RefreshCw className="ml-2 size-4" />
 					</Button>
 				</div>
 			</DialogContent>

@@ -36,21 +36,24 @@ export function LeaveServerModal() {
 
 	return (
 		<Dialog open={isModelOpen} onOpenChange={onClose}>
-			<DialogContent aria-describedby={undefined} className="bg-white text-black p-0 overflow-hidden">
-				<DialogHeader className="pt-8 px-6">
-					<DialogTitle className="text-2xl text-center font-bold">Leave Server</DialogTitle>
-					<DialogDescription className="text-center text-zinc-500">
+			<DialogContent
+				aria-describedby={undefined}
+				className="overflow-hidden bg-shell-chat p-0 text-foreground"
+			>
+				<DialogHeader className="px-6 pt-8">
+					<DialogTitle className="text-center text-2xl font-bold">Leave group</DialogTitle>
+					<DialogDescription className="text-center text-shell-muted">
 						Are you sure you want to leave{" "}
-						<span className="text-indigo-500 font-semibold">{data?.server?.name}</span>?
+						<span className="font-semibold text-shell-accent">{data?.server?.name}</span>?
 					</DialogDescription>
 				</DialogHeader>
-				<DialogFooter className="px-6 py-4 bg-gray-100">
-					<div className="flex items-center justify-between w-full">
+				<DialogFooter className="bg-shell-nav px-6 py-4">
+					<div className="flex w-full items-center justify-between">
 						<Button disabled={isLoading} onClick={onClose} variant="ghost">
 							Cancel
 						</Button>
-						<Button disabled={isLoading} onClick={handleLeaveServer} variant="primary">
-							Confirm
+						<Button disabled={isLoading} onClick={handleLeaveServer} variant="destructive">
+							Leave
 						</Button>
 					</div>
 				</DialogFooter>

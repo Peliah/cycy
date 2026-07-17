@@ -33,8 +33,8 @@ interface ChatItemProps {
 
 const roleIconMap = {
 	GUEST: null,
-	ADMIN: <ShieldAlert className="w-4 h-4 ml-2 text-rose-500" />,
-	MODERATOR: <ShieldCheck className="w-4 ml-2 h-4 text-indigo-500" />,
+	ADMIN: <ShieldAlert className="ml-2 size-4 text-amber-600 dark:text-amber-400" />,
+	MODERATOR: <ShieldCheck className="ml-2 size-4 text-shell-accent" />,
 };
 
 const formSchema = z.object({
@@ -113,27 +113,35 @@ export function ChatItem({
 	}
 
 	return (
-		<div className="relative group flex items-center hover:bg-black/5 p-4 transition w-full">
-			<div className="group flex gap-x-2 items-start w-full">
-				<div onClick={onMemberClick} className="transition cursor-pointer hover:drop-shadow-md">
+		<div className="group relative flex w-full items-center p-4 transition hover:bg-shell-hover/60">
+			<div className="group flex w-full items-start gap-x-2">
+				<div
+					onClick={onMemberClick}
+					className="cursor-pointer transition hover:opacity-90"
+				>
 					<UserAvatar src={member.profile.imageUrl ?? undefined} />
 				</div>
-				<div className="flex flex-col w-full">
+				<div className="flex w-full flex-col">
 					<div className="flex items-center gap-x-2">
 						<div className="flex items-center">
-							<p onClick={onMemberClick} className="font-semibold text-sm hover:underline cursor-pointer">
+							<p
+								onClick={onMemberClick}
+								className="cursor-pointer text-sm font-semibold text-foreground hover:underline"
+							>
 								{member.profile.name}
 							</p>
-							<ActionTooltip label={member.role}>{roleIconMap[member.role]}</ActionTooltip>
+							<ActionTooltip label={member.role}>
+								{roleIconMap[member.role]}
+							</ActionTooltip>
 						</div>
-						<span className="text-xs text-zinc-500 dark:text-zinc-400">{timestamp}</span>
+						<span className="text-xs text-shell-muted">{timestamp}</span>
 					</div>
 					{isImage && (
 						<a
 							href={fileUrl}
 							target="_blank"
 							rel="noreferrer noopener"
-							className="relative aspect-square rounded-md mt-2 overflow-hidden border flex items-center bg-secondary h-48 w-48"
+							className="relative mt-2 flex aspect-square h-48 w-48 items-center overflow-hidden rounded-md border border-shell-border bg-shell-nav"
 						>
 							<Image src={fileUrl} alt={content} fill className="object-cover" />
 						</a>
@@ -143,21 +151,21 @@ export function ChatItem({
 							href={fileUrl}
 							target="_blank"
 							rel="noreferrer noopener"
-							className="relative aspect-square rounded-md mt-2 overflow-hidden border flex items-center bg-secondary h-48 w-48"
+							className="relative mt-2 flex aspect-square h-48 w-48 items-center overflow-hidden rounded-md border border-shell-border bg-shell-nav"
 						>
-							<FileText className="w-12 h-12 text-zinc-500 dark:text-zinc-400 m-auto" />
+							<FileText className="m-auto size-12 text-shell-muted" />
 						</a>
 					)}
 					{!fileUrl && !isEditing && (
 						<p
 							className={cn(
-								"text-sm text-zinc-600 dark:text-zinc-300",
-								deleted && "italic text-zinc-500 dark:text-zinc-400 text-xs mt-1"
+								"text-sm text-foreground/90",
+								deleted && "mt-1 text-xs italic text-shell-muted",
 							)}
 						>
 							{content}
 							{isUpdated && !deleted && (
-								<span className="text-[10px] text-zinc-500 dark:text-zinc-400 ">(edited)</span>
+								<span className="ml-1 text-[10px] text-shell-muted">(edited)</span>
 							)}
 						</p>
 					)}
@@ -165,7 +173,7 @@ export function ChatItem({
 						<Form {...form}>
 							<form
 								onSubmit={form.handleSubmit(onSubmit)}
-								className="flex items-center w-full gap-x-2 pt-2"
+								className="flex w-full items-center gap-x-2 pt-2"
 							>
 								<FormField
 									control={form.control}
@@ -176,8 +184,8 @@ export function ChatItem({
 												<div className="relative w-full">
 													<Input
 														disabled={isLoading}
-														className="p-2 bg-zinc-200/90 dark:bg-zinc-700/75 border-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-zinc-600 dark:text-zinc-200"
-														placeholder="Edited Message"
+														className="border-shell-border bg-shell-nav p-2 text-foreground focus-visible:ring-shell-accent"
+														placeholder="Edited message"
 														{...field}
 													/>
 												</div>
@@ -189,29 +197,32 @@ export function ChatItem({
 									Save
 								</Button>
 							</form>
-							<span className="mt-1 text-[10px] text-zinc-400">
-								Press escape to cancel , enter to save
+							<span className="mt-1 text-[10px] text-shell-muted">
+								Press escape to cancel, enter to save
 							</span>
 						</Form>
 					)}
 				</div>
 			</div>
 			{canDeleteMessage && (
-				<div className="hidden group-hover:flex items-center gap-x-2 absolute p-1 -top-2 right-5 bg-white dark:bg-zinc-800 border rounded-sm">
+				<div className="absolute -top-2 right-5 hidden items-center gap-x-2 rounded-md border border-shell-border bg-shell-chat p-1 shadow-sm group-hover:flex">
 					{canEditMessage && (
 						<ActionTooltip label="Edit">
 							<Edit
 								onClick={() => setIsEditing(true)}
-								className="cursor-pointer ml-auto w-4 h-4 text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300 transition"
+								className="ml-auto size-4 cursor-pointer text-shell-muted transition hover:text-foreground"
 							/>
 						</ActionTooltip>
 					)}
 					<ActionTooltip label="Delete">
 						<Trash
 							onClick={() =>
-								onOpen("deleteMessage", { apiUrl: `${socketUrl}/${id}`, query: socketQuery })
+								onOpen("deleteMessage", {
+									apiUrl: `${socketUrl}/${id}`,
+									query: socketQuery,
+								})
 							}
-							className="cursor-pointer ml-auto w-4 h-4 text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300 transition"
+							className="ml-auto size-4 cursor-pointer text-shell-muted transition hover:text-destructive"
 						/>
 					</ActionTooltip>
 				</div>

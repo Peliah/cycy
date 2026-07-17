@@ -1,9 +1,10 @@
 "use client";
+
 import { ActionTooltip } from "@/components/ui/action-tooltip";
 import { useStore } from "@/store/store";
-import { ServerWithMembersWithProfiles } from "@/types/server";
+import type { ServerWithMembersWithProfiles } from "@/types/server";
 import { ChannelType, MemberRole } from "@prisma/client";
-import { Plus ,Settings} from "lucide-react";
+import { Plus, Settings } from "lucide-react";
 
 interface ServerSectionProps {
 	label: string;
@@ -13,30 +14,39 @@ interface ServerSectionProps {
 	server?: ServerWithMembersWithProfiles;
 }
 
-export function ServerSection({ label, role, sectionType, channelType, server }: ServerSectionProps) {
-	const isOpen = useStore.use.isOpen();
+export function ServerSection({
+	label,
+	role,
+	sectionType,
+	channelType,
+	server,
+}: ServerSectionProps) {
 	const onOpen = useStore.use.onOpen();
 
 	return (
-		<div className="flex items-center justify-between p-2 ">
-			<p className="text-sm font-semibold uppercase text-zinc-500 dark:text-zinc-400">{label}</p>
+		<div className="flex items-center justify-between px-2 py-1">
+			<p className="text-[11px] font-semibold uppercase tracking-wide text-shell-muted">
+				{label}
+			</p>
 			{role !== MemberRole.GUEST && sectionType === "channels" && (
 				<ActionTooltip label="Create Channel" side="top">
 					<button
-						onClick={() => onOpen("createChannel",{channelType})}
-						className="text-zinc-500 hover:text-zinc-600 dark:text-zinc-400 dark:hover:text-zinc-300 transition"
+						type="button"
+						onClick={() => onOpen("createChannel", { channelType })}
+						className="text-shell-muted transition hover:text-shell-accent"
 					>
-						<Plus className="h-4 w-4" />
+						<Plus className="size-4" />
 					</button>
 				</ActionTooltip>
 			)}
 			{role === MemberRole.ADMIN && sectionType === "members" && (
 				<ActionTooltip label="Manage Members" side="top">
 					<button
+						type="button"
 						onClick={() => onOpen("manageMembers", { server })}
-						className="text-zinc-500 hover:text-zinc-600 dark:text-zinc-400 dark:hover:text-zinc-300 transition"
+						className="text-shell-muted transition hover:text-shell-accent"
 					>
-						<Settings className="h-4 w-4" />
+						<Settings className="size-4" />
 					</button>
 				</ActionTooltip>
 			)}

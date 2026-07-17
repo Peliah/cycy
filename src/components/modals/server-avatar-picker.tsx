@@ -128,7 +128,7 @@ export function ServerAvatarPicker({
 				aria-label={previewSrc ? "Change server icon" : "Upload server icon"}
 			>
 				<div
-					className="relative overflow-hidden rounded-full bg-zinc-100 ring-2 ring-zinc-200 ring-offset-2 ring-offset-white"
+					className="relative overflow-hidden rounded-full bg-shell-nav ring-2 ring-shell-border ring-offset-2 ring-offset-shell-chat"
 					style={{ width: SIZE, height: SIZE }}
 				>
 					{previewSrc ? (
@@ -140,7 +140,7 @@ export function ServerAvatarPicker({
 							unoptimized
 						/>
 					) : (
-						<div className="flex h-full w-full flex-col items-center justify-center gap-1 text-zinc-400">
+						<div className="flex h-full w-full flex-col items-center justify-center gap-1 text-shell-muted">
 							<Camera className="h-7 w-7" />
 							<span className="text-[10px] font-semibold uppercase tracking-wide">Upload</span>
 						</div>
@@ -173,7 +173,7 @@ export function ServerAvatarPicker({
 							fill="none"
 							stroke="currentColor"
 							strokeWidth={STROKE}
-							className="text-zinc-200"
+							className="text-shell-border"
 						/>
 						<circle
 							cx={SIZE / 2}
@@ -183,7 +183,7 @@ export function ServerAvatarPicker({
 							stroke="currentColor"
 							strokeWidth={STROKE}
 							strokeLinecap="round"
-							className="text-indigo-500 transition-[stroke-dashoffset] duration-150"
+							className="text-shell-accent transition-[stroke-dashoffset] duration-150"
 							strokeDasharray={CIRCUMFERENCE}
 							strokeDashoffset={CIRCUMFERENCE - (progress / 100) * CIRCUMFERENCE}
 						/>
@@ -218,7 +218,7 @@ export function ServerAvatarPicker({
 				disabled={disabled || isUploading}
 			/>
 
-			<p className="text-xs text-zinc-500">
+			<p className="text-xs text-shell-muted">
 				{isUploading ? "Uploading..." : previewSrc ? "Click to change" : "Click to upload an icon"}
 			</p>
 		</div>

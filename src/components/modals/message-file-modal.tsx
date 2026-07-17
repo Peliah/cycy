@@ -64,11 +64,13 @@ export function MessageFileModal() {
 	};
 	return (
 		<Dialog open={isModalOpen} onOpenChange={handleClose}>
-			<DialogContent className="bg-white text-black p-0 overflow-hidden">
-				<DialogHeader className="pt-8 px-6">
-					<DialogTitle className="text-2xl text-center font-bold">Add an Attachment</DialogTitle>
-					<DialogDescription className="text-center text-zinc-500">
-						Upload an image or a document to share with your Friend
+			<DialogContent className="overflow-hidden bg-shell-chat p-0 text-foreground">
+				<DialogHeader className="px-6 pt-8">
+					<DialogTitle className="text-center text-2xl font-bold">
+						Add an attachment
+					</DialogTitle>
+					<DialogDescription className="text-center text-shell-muted">
+						Upload an image or a document to share
 					</DialogDescription>
 				</DialogHeader>
 				<Form {...form}>
@@ -113,7 +115,7 @@ export function MessageFileModal() {
 													</div>
 												) : !field?.value ? (
 													<UploadDropzone
-														className="mt-4 focus-visible:outline-zinc-700 focus-visible:outline-dashed ut-button:bg-indigo-500 ut-button:text-white ut-button:hover:bg-indigo-500/90 ut-button:ut-readying:bg-indigo-500/90 ut-button:ut-uploading:bg-indigo-500/90 ut-button:after:bg-indigo-700 ut-label:text-zinc-700 ut-allowed-content:text-zinc-500"
+														className="ut-button:bg-shell-accent ut-button:text-shell-accent-foreground ut-button:hover:bg-shell-accent/90 ut-button:ut-readying:bg-shell-accent/90 ut-button:ut-uploading:bg-shell-accent/90 ut-label:text-shell-accent ut-allowed-content:text-shell-muted mt-4 border-shell-border"
 														endpoint="messageFile"
 														onClientUploadComplete={(res) => {
 															field.onChange(res?.[0].url);
@@ -122,13 +124,13 @@ export function MessageFileModal() {
 														}}
 													/>
 												) : (
-													<div className="relative flex items-center p-2 mt-2 rounded-md bg-background/10">
-														<FileIcon className="h-10 w-10 fill-indigo-200 stroke-indigo-400" />
+													<div className="relative mt-2 flex items-center rounded-md border border-shell-border bg-shell-nav p-2">
+														<FileIcon className="size-10 fill-shell-active stroke-shell-accent" />
 														<a
 															href={field?.value}
 															target="_blank"
 															rel="noopener noreferrer"
-															className="ml-2 text-sm text-indigo-500 dark:text-indigo-400 hover:underline"
+															className="ml-2 text-sm text-shell-accent hover:underline"
 														>
 															{field?.value}
 														</a>
@@ -161,7 +163,7 @@ export function MessageFileModal() {
 								/>
 							</div>
 						</div>
-						<DialogFooter className="bg-gray-100  px-6 py-4">
+						<DialogFooter className="bg-shell-nav px-6 py-4">
 							<Button type="submit" variant="primary" disabled={isLoading} className="w-full sm:w-20">
 								Send
 							</Button>

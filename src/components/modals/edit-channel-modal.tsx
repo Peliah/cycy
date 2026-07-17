@@ -84,9 +84,9 @@ export function EditChannelModal() {
 	};
 	return (
 		<Dialog  open={isModelOpen} onOpenChange={handleClose}>
-			<DialogContent  className="bg-white text-black p-0 overflow-hidden">
-				<DialogHeader className="pt-8 px-6">
-					<DialogTitle className="text-2xl text-center font-bold">Edit Channel</DialogTitle>
+			<DialogContent className="overflow-hidden bg-shell-chat p-0 text-foreground">
+				<DialogHeader className="px-6 pt-8">
+					<DialogTitle className="text-center text-2xl font-bold">Edit channel</DialogTitle>
 				</DialogHeader>
 				<Form {...form}>
 					<form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
@@ -96,15 +96,15 @@ export function EditChannelModal() {
 								name="name"
 								render={({ field }) => (
 									<FormItem>
-										<FormLabel className="uppercase text-xs font-bold text-zinc-500 dark:text-secondary/70">
-											Chanel name
+										<FormLabel className="text-xs font-bold uppercase text-shell-muted">
+											Channel name
 										</FormLabel>
 
 										<FormControl>
 											<Input
 												disabled={isLoading}
-												className="bg-zinc-300/50 border-0 focus-visible:ring-0 text-black focus-visible:ring-offset-0"
-												placeholder="Enter Channel name"
+												className="border-shell-border bg-shell-nav text-foreground focus-visible:ring-shell-accent"
+												placeholder="Enter channel name"
 												{...field}
 											/>
 										</FormControl>
@@ -117,14 +117,14 @@ export function EditChannelModal() {
 								name="type"
 								render={({ field }) => (
 									<FormItem>
-										<FormLabel>Channel Type</FormLabel>
+										<FormLabel>Channel type</FormLabel>
 										<Select
 											disabled={isLoading}
 											onValueChange={field.onChange}
 											defaultValue={field.value}
 										>
 											<FormControl>
-												<SelectTrigger className="bg-zinc-300/50 border-0 focus:ring-0 text-black  ring-offset-0 focus:ring-offset-0 capitalize outline-none">
+												<SelectTrigger className="capitalize border-shell-border bg-shell-nav text-foreground outline-none focus:ring-shell-accent">
 													<SelectValue placeholder="Select a channel type" />
 												</SelectTrigger>
 											</FormControl>
@@ -141,7 +141,7 @@ export function EditChannelModal() {
 								)}
 							/>
 						</div>
-						<DialogFooter className="bg-gray-100 px-6 py-4">
+						<DialogFooter className="bg-shell-nav px-6 py-4">
 							<Button type="submit" variant="primary" disabled={isLoading} className="w-full">
 								Save
 							</Button>

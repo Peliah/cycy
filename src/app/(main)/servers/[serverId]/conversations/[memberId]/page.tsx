@@ -47,7 +47,7 @@ export default async function MemberIdPage({ params, searchParams }: MemberIdPag
 	const otherMember = memberOne.profileId === profile.id ? memberTwo : memberOne;
 
 	return (
-		<div className="bg-white dark:bg-[#313338] flex flex-col h-full">
+		<div className="flex h-full flex-col bg-shell-chat">
 			<ChatHeader
 				name={otherMember.profile.name}
 				serverId={serverId}

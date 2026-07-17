@@ -33,8 +33,12 @@ export function ManageMembersModal() {
 	const data = useStore.use.data() as { server: ServerWithMembersWithProfiles };
 	const isModelOpen = isOpen && type === "manageMembers";
 	const roleIconMap = {
-		[MemberRole.ADMIN]: <ShieldAlert className="w-4 text-rose-500 h-4 ml-2" />,
-		[MemberRole.MODERATOR]: <ShieldCheck className="w-4 h-4 text-indigo-600 dark:text-indigo-400  ml-2" />,
+		[MemberRole.ADMIN]: (
+			<ShieldAlert className="ml-2 size-4 text-amber-600 dark:text-amber-400" />
+		),
+		[MemberRole.MODERATOR]: (
+			<ShieldCheck className="ml-2 size-4 text-shell-accent" />
+		),
 		[MemberRole.GUEST]: null,
 	};
 
@@ -78,29 +82,34 @@ export function ManageMembersModal() {
 
 	return (
 		<Dialog open={isModelOpen} onOpenChange={onClose}>
-			<DialogContent aria-describedby={undefined} className="bg-white text-black overflow-hidden">
-				<DialogHeader className="pt-8 px-6">
-					<DialogTitle className="text-2xl text-center font-bold">Manage Members</DialogTitle>
-					<DialogDescription className="text-center text-sm text-zinc-500 dark:text-neutral-400 px-6 py-2">
+			<DialogContent
+				aria-describedby={undefined}
+				className="overflow-hidden bg-shell-chat text-foreground"
+			>
+				<DialogHeader className="px-6 pt-8">
+					<DialogTitle className="text-center text-2xl font-bold">
+						Manage members
+					</DialogTitle>
+					<DialogDescription className="px-6 py-2 text-center text-sm text-shell-muted">
 						{data?.server?.members?.length} members
 					</DialogDescription>
 				</DialogHeader>
 				<ScrollArea className="mt-8 max-h-[420px] pr-6">
 					{data?.server?.members?.map((member) => (
-						<div key={member.id} className="flex items-center  gap-x-2 mb-6">
+						<div key={member.id} className="mb-6 flex items-center gap-x-2">
 							<UserAvatar src={member?.profile?.imageUrl ?? undefined} />
 							<div className="flex flex-col gap-y-1">
-								<div className="text-sm font-semibold  gap-x-1 flex items-center">
+								<div className="flex items-center gap-x-1 text-sm font-semibold">
 									{member.profile?.name}
 									{roleIconMap[member.role]}
 								</div>
-								<p className="text-xs text-zinc-500">{member.profile.email}</p>
+								<p className="text-xs text-shell-muted">{member.profile.email}</p>
 							</div>
 							{data?.server?.profileId !== member.profileId && loadingId !== member.id && (
 								<div className="ml-auto">
 									<DropdownMenu modal={true}>
 										<DropdownMenuTrigger asChild>
-											<MoreVertical className="w-4 h-4 text-zinc-500" />
+											<MoreVertical className="size-4 text-shell-muted" />
 										</DropdownMenuTrigger>
 
 										<DropdownMenuContent side="left">
@@ -144,7 +153,7 @@ export function ManageMembersModal() {
 								</div>
 							)}
 							{loadingId === member.id && (
-								<Loader2 className="animate-spin text-zinc-500 ml-auto w-4 h-4" />
+								<Loader2 className="ml-auto size-4 animate-spin text-shell-muted" />
 							)}
 						</div>
 					))}

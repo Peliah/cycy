@@ -29,11 +29,14 @@ export default async function ChannelIdPage({ params }: ChannelIdPageProps) {
 	if (!channel || !member) {
 		return redirect("/");
 	}
+	const isMedia =
+		channel.type === ChannelType.VIDEO || channel.type === ChannelType.AUDIO;
+
 	return (
 		<div
 			className={cn(
-				"bg-white dark:bg-[#313338] flex flex-col h-full",
-				"overflow-hidden" && (channel.type === ChannelType.VIDEO || channel.type === ChannelType.AUDIO)
+				"flex h-full flex-col bg-shell-chat",
+				isMedia && "overflow-hidden",
 			)}
 		>
 			<ChatHeader name={channel?.name} serverId={channel?.serverId} type="channel" />

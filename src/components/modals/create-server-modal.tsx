@@ -69,14 +69,16 @@ export function CreateServerModal() {
 	return (
 		<Dialog open={isModelOpen} onOpenChange={(open) => !open && handleClose()}>
 			<DialogContent
-				className="bg-white text-black p-0 overflow-hidden"
+				className="overflow-hidden bg-shell-chat p-0 text-foreground"
 				onPointerDownOutside={(event) => isUploading && event.preventDefault()}
 				onInteractOutside={(event) => isUploading && event.preventDefault()}
 			>
-				<DialogHeader className="pt-8 px-6">
-					<DialogTitle className="text-2xl text-center font-bold">Create a server</DialogTitle>
-					<DialogDescription className="text-center text-zinc-500">
-						Give your server a name and an optional icon. You can change these anytime.
+				<DialogHeader className="px-6 pt-8">
+					<DialogTitle className="text-center text-2xl font-bold">
+						Create a group
+					</DialogTitle>
+					<DialogDescription className="text-center text-shell-muted">
+						Give your group a name and an optional icon. You can change these anytime.
 					</DialogDescription>
 				</DialogHeader>
 				<Form {...form}>
@@ -86,7 +88,7 @@ export function CreateServerModal() {
 							isSubmitting={isLoading}
 							onUploadingChange={setIsUploading}
 						/>
-						<DialogFooter className="bg-gray-100 px-6 py-4">
+						<DialogFooter className="bg-shell-nav px-6 py-4">
 							<Button
 								type="submit"
 								variant="primary"
@@ -99,7 +101,7 @@ export function CreateServerModal() {
 										Creating...
 									</>
 								) : (
-									"Create server"
+									"Create group"
 								)}
 							</Button>
 						</DialogFooter>
