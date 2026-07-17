@@ -1,9 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -14,28 +11,36 @@ datasource db {
 }
 
 model Profile {
-  id       String    @id @default(cuid())
-  userId   String    @unique
-  name     String
-  email    String    @db.Text
-  imageUrl String?   @db.Text
-  servers  Server[]
-  members  Member[]
-  channels Channel[]
+  id                 String    @id @default(cuid())
+  userId             String    @unique
+  name               String
+  email              String    @db.Text
+  imageUrl           String?   @db.Text
+  onboardingComplete Boolean   @default(false)
+  totalXp            Int       @default(0)
+  servers            Server[]
+  members            Member[]
+  channels           Channel[]
+  notifications      Notification[]
+  certificates       Certificate[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model Server {
-  id         String    @id @default(cuid())
-  name       String
-  imageUrl   String?   @db.Text
-  inviteCode String    @unique
-  profileId  String
-  profile    Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  members    Member[]
-  channels   Channel[]
+  id             String    @id @default(cuid())
+  name           String
+  imageUrl       String?   @db.Text
+  inviteCode     String    @unique
+  learningGoal   String?   @db.Text
+  learningReason String?   @db.Text
+  profileId      String
+  profile        Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  members        Member[]
+  channels       Channel[]
+  materials      LearningMaterial[]
+  curriculum     Curriculum?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -44,16 +49,21 @@ model Server {
 }
 
 model Member {
-  id        String     @id @default(cuid())
-  role      MemberRole @default(GUEST)
-  profileId String
-  profile   Profile    @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  serverId  String
-  server    Server     @relation(fields: [serverId], references: [id], onDelete: Cascade)
-  messages  Message[]
+  id                   String            @id @default(cuid())
+  role                 MemberRole        @default(GUEST)
+  xp                   Int               @default(0)
+  profileId            String
+  profile              Profile           @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  serverId             String
+  server               Server            @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  messages             Message[]
   conversationsInitiated Conversation[] @relation("memberOne")
-  conversationsReceived Conversation[] @relation("memberTwo")
-  directMessages DirectMessage[]
+  conversationsReceived  Conversation[] @relation("memberTwo")
+  directMessages       DirectMessage[]
+  moduleProgress       ModuleProgress[]
+  quizAttempts         QuizAttempt[]
+  certificates         Certificate[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -80,11 +90,11 @@ model Channel {
 
 model Message {
   id        String  @id @default(cuid())
-  content   String @db.Text
+  content   String  @db.Text
   fileUrl   String? @db.Text
   deleted   Boolean @default(false)
   memberId  String
-  member    Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  member    Member  @relation(fields: [memberId], references: [id], onDelete: Cascade)
   channelId String
   channel   Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
 
@@ -96,12 +106,13 @@ model Message {
 }
 
 model Conversation {
-  id        String   @id @default(cuid())
-  memberOneId String
-  memberOne   Member @relation("memberOne",fields: [memberOneId], references: [id], onDelete: Cascade)
-  memberTwoId String
-  memberTwo   Member @relation("memberTwo",fields: [memberTwoId], references: [id], onDelete: Cascade)
-  directMessages   DirectMessage[]
+  id             String          @id @default(cuid())
+  memberOneId    String
+  memberOne      Member          @relation("memberOne", fields: [memberOneId], references: [id], onDelete: Cascade)
+  memberTwoId    String
+  memberTwo      Member          @relation("memberTwo", fields: [memberTwoId], references: [id], onDelete: Cascade)
+  directMessages DirectMessage[]
+
   @@index([memberTwoId])
   @@unique([memberOneId, memberTwoId])
 
@@ -110,13 +121,12 @@ model Conversation {
 }
 
 model DirectMessage {
-  id        String  @id @default(cuid())
-  content   String @db.Text
-  fileUrl   String? @db.Text
-  deleted   Boolean @default(false)
-  
-  memberId  String
-  member    Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  id             String       @id @default(cuid())
+  content        String       @db.Text
+  fileUrl        String?      @db.Text
+  deleted        Boolean      @default(false)
+  memberId       String
+  member         Member       @relation(fields: [memberId], references: [id], onDelete: Cascade)
   conversationId String
   conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 
@@ -125,6 +135,192 @@ model DirectMessage {
 
   @@index([conversationId])
   @@index([memberId])
+}
+
+// ——— Learning domain ———
+
+model LearningMaterial {
+  id           String                 @id @default(cuid())
+  serverId     String
+  server       Server                 @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  fileName     String
+  fileUrl      String                 @db.Text
+  mimeType     String
+  extractedText String?               @db.Text
+  status       LearningMaterialStatus @default(UPLOADED)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([serverId])
+}
+
+model Curriculum {
+  id       String           @id @default(cuid())
+  serverId String           @unique
+  server   Server           @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  status   CurriculumStatus @default(PENDING)
+  summary  String?          @db.Text
+  modules  Module[]
+  quizzes  Quiz[]
+  finalExam FinalExam?
+  canvaDesign CanvaDesign?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Module {
+  id               String           @id @default(cuid())
+  curriculumId     String
+  curriculum       Curriculum       @relation(fields: [curriculumId], references: [id], onDelete: Cascade)
+  order            Int
+  title            String
+  content          String           @db.Text
+  xpReward         Int              @default(100)
+  timeLimitMinutes Int              @default(60)
+  progress         ModuleProgress[]
+  quiz             Quiz?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([curriculumId])
+  @@unique([curriculumId, order])
+}
+
+model ModuleProgress {
+  id          String              @id @default(cuid())
+  memberId    String
+  member      Member              @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  moduleId    String
+  module      Module              @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  status      ModuleProgressStatus @default(LOCKED)
+  score       Float?
+  xpEarned    Int                 @default(0)
+  startedAt   DateTime?
+  completedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([memberId, moduleId])
+  @@index([memberId])
+  @@index([moduleId])
+}
+
+model Quiz {
+  id           String         @id @default(cuid())
+  curriculumId String
+  curriculum   Curriculum     @relation(fields: [curriculumId], references: [id], onDelete: Cascade)
+  moduleId     String?        @unique
+  module       Module?        @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  kind         QuizKind       @default(GATE)
+  title        String
+  passScore    Float          @default(0.7)
+  questions    QuizQuestion[]
+  attempts     QuizAttempt[]
+  finalExam    FinalExam?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([curriculumId])
+}
+
+model QuizQuestion {
+  id            String           @id @default(cuid())
+  quizId        String
+  quiz          Quiz             @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  order         Int
+  type          QuizQuestionType
+  prompt        String           @db.Text
+  choices       Json?
+  correctAnswer String?          @db.Text
+  rubric        String?          @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([quizId])
+  @@unique([quizId, order])
+}
+
+model QuizAttempt {
+  id        String   @id @default(cuid())
+  quizId    String
+  quiz      Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  memberId  String
+  member    Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  answers   Json
+  score     Float
+  passed    Boolean
+  createdAt DateTime @default(now())
+
+  @@index([quizId])
+  @@index([memberId])
+}
+
+model FinalExam {
+  id           String        @id @default(cuid())
+  curriculumId String        @unique
+  curriculum   Curriculum    @relation(fields: [curriculumId], references: [id], onDelete: Cascade)
+  quizId       String        @unique
+  quiz         Quiz          @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  passScore    Float         @default(0.7)
+  certificates Certificate[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Certificate {
+  id            String    @id @default(cuid())
+  finalExamId   String
+  finalExam     FinalExam @relation(fields: [finalExamId], references: [id], onDelete: Cascade)
+  memberId      String
+  member        Member    @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  profileId     String
+  profile       Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  verificationCode String @unique
+  issuedAt      DateTime  @default(now())
+  pdfUrl        String?   @db.Text
+
+  @@unique([finalExamId, memberId])
+  @@index([profileId])
+  @@index([memberId])
+}
+
+model CanvaDesign {
+  id              String            @id @default(cuid())
+  curriculumId    String            @unique
+  curriculum      Curriculum        @relation(fields: [curriculumId], references: [id], onDelete: Cascade)
+  brandTemplateId String?
+  designId        String?
+  editUrl         String?           @db.Text
+  viewUrl         String?           @db.Text
+  thumbnailUrl    String?           @db.Text
+  exportUrl       String?           @db.Text
+  jobId           String?
+  status          CanvaDesignStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  profileId String
+  profile   Profile          @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  type      NotificationType
+  title     String
+  body      String           @db.Text
+  payload   Json?
+  readAt    DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([profileId])
 }
 
 enum ChannelType {
@@ -137,4 +333,49 @@ enum MemberRole {
   MODERATOR
   GUEST
   ADMIN
+}
+
+enum LearningMaterialStatus {
+  UPLOADED
+  EXTRACTING
+  READY
+  FAILED
+}
+
+enum CurriculumStatus {
+  PENDING
+  GENERATING
+  READY
+  FAILED
+}
+
+enum ModuleProgressStatus {
+  LOCKED
+  AVAILABLE
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum QuizKind {
+  GATE
+  FINAL
+}
+
+enum QuizQuestionType {
+  MCQ
+  STRUCTURAL
+}
+
+enum CanvaDesignStatus {
+  PENDING
+  GENERATING
+  READY
+  FAILED
+}
+
+enum NotificationType {
+  INVITE
+  PEER_ONLINE
+  LEADERBOARD
+  SYSTEM
 }

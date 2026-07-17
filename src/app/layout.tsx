@@ -16,7 +16,7 @@ const open_sans = Open_Sans({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
 	title: "Cycy",
-	description: "A Full-Featured Real Time (Video , Audio , Chat) Application",
+	description: "AI collaboration hub — study groups, roadmaps, and certificates.",
 	openGraph: {
 		type: "website",
 	},
