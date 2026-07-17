@@ -26,16 +26,20 @@ function PointerC({ label }: { label: string }) {
 	);
 }
 
-function formatDate(date: Date) {
-	return date.toLocaleDateString("en-US", {
+function formatDate(date: Date | number | null | undefined) {
+	if (!date) return "—";
+	const d = date instanceof Date ? date : new Date(date);
+	return d.toLocaleDateString("en-US", {
 		month: "short",
 		day: "numeric",
 		year: "numeric",
 	});
 }
 
-function formatDateWithNumbers(date: Date): string {
-	return date.toLocaleString("en-US", {
+function formatDateWithNumbers(date: Date | number | null | undefined): string {
+	if (!date) return "—";
+	const d = date instanceof Date ? date : new Date(date);
+	return d.toLocaleString("en-US", {
 		month: "numeric",
 		day: "numeric",
 		year: "numeric",
@@ -47,11 +51,16 @@ function formatDateWithNumbers(date: Date): string {
 }
 
 export function UserDetails() {
-	const { user } = useUser();
-	const { session } = useSession();
+	const { user, isLoaded: isUserLoaded } = useUser();
+	const { session, isLoaded: isSessionLoaded } = useSession();
 	const { organization } = useOrganization();
 
-	if (!user || !session) return null;
+	if (!isUserLoaded || !isSessionLoaded || !user || !session) return null;
+
+	const email =
+		user.primaryEmailAddress?.emailAddress ??
+		user.emailAddresses[0]?.emailAddress ??
+		"—";
 
 	return (
 		<div className="p-16 rounded-lg border border-[#EDEDED] bg-[#F1F1F2] background relative">
@@ -91,13 +100,13 @@ export function UserDetails() {
 				</div>
 
 				<div className="px-2.5 bg-[#FAFAFB] rounded-lg divide-y divide-[#EEEEF0]">
-					<Row desc="Email" value={user.emailAddresses[0].emailAddress}>
-						<PointerC label="user.emailAddresses[0].emailAddress" />
+					<Row desc="Email" value={email}>
+						<PointerC label="user.primaryEmailAddress?.emailAddress" />
 					</Row>
-					<Row desc="Last signed in" value={formatDate(user.lastSignInAt!)}>
+					<Row desc="Last signed in" value={formatDate(user.lastSignInAt)}>
 						<PointerC label="user.lastSignInAt" />
 					</Row>
-					<Row desc="Joined on" value={formatDate(user.createdAt!)}>
+					<Row desc="Joined on" value={formatDate(user.createdAt)}>
 						<PointerC label="user.createdAt" />
 					</Row>
 					<Row desc="User ID" value={user.id}>

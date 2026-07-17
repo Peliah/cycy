@@ -12,24 +12,21 @@ const handleAuth = async () => {
 
 // FileRouter for your app, can contain multiple FileRoutes
 export const ourFileRouter = {
-	serverImage: f({ image: { maxFileSize: "4MB", maxFileCount: 1 } })
+	serverImage: f(
+		{ image: { maxFileSize: "4MB", maxFileCount: 1 } },
+		{ awaitServerData: false },
+	)
 		.middleware(() => handleAuth())
 		.onUploadComplete(async ({ metadata, file }) => {
 			console.log("Upload complete for userId:", metadata.userId);
-			console.log("file url", file.url);
-			return { uploadedBy: metadata.userId };
+			console.log("file url", file.ufsUrl ?? file.url);
 		}),
-	messageFile: f(["image", "pdf"])
+	messageFile: f(["image", "pdf"], { awaitServerData: false })
 		.middleware(() => handleAuth())
 		.onUploadComplete(async ({ metadata, file }) => {
 			console.log("Upload complete for userId:", metadata.userId);
-			console.log("file url", file.url);
-			return { uploadedBy: metadata.userId };
+			console.log("file url", file.ufsUrl ?? file.url);
 		}),
-
-	// 	// !!! Whatever is returned here is sent to the clientside `onClientUploadComplete` callback
-	// 	return { uploadedBy: metadata.userId };
-	// }),
 } satisfies FileRouter;
 
 export type OurFileRouter = typeof ourFileRouter;

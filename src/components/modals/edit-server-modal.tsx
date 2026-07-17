@@ -2,25 +2,31 @@
 
 import { Button } from "@/components/ui/button";
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
 } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { UploadDropzone } from "@/lib/uploadthing";
+import { ServerAvatarPicker } from "@/components/modals/server-avatar-picker";
 import { useStore } from "@/store/store";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios from "axios";
-import Image from "next/image";
+import { Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+const schema = z.object({
+	name: z.string().min(1, { message: "Server name is required" }),
+	imageUrl: z.string().optional(),
+});
+
+type FormValues = z.infer<typeof schema>;
 
 export function EditServerModal() {
 	const router = useRouter();
@@ -28,140 +34,93 @@ export function EditServerModal() {
 	const isOpen = useStore.use.isOpen();
 	const onClose = useStore.use.onClose();
 	const data = useStore.use.data();
+	const [isUploading, setIsUploading] = useState(false);
 
 	const isModelOpen = isOpen && type === "editServer";
 
-	const schema = z.object({
-		name: z.string().min(1, { message: "Server name is required" }),
-		imageUrl: z.string().min(1, { message: "Image URL is invalid" }),
-	});
-	const form = useForm({
+	const form = useForm<FormValues>({
 		resolver: zodResolver(schema),
 		defaultValues: {
 			name: "",
-			imageUrl: "",
+			imageUrl: undefined,
 		},
 	});
 
 	useEffect(() => {
-		if (data?.server) {
-			form.setValue("name", data?.server?.name as string);
-			form.setValue("imageUrl", data?.server?.imageUrl as string);
-		} else {
+		if (isModelOpen && data?.server) {
 			form.reset({
-				name: "",
-				imageUrl: "",
+				name: data.server.name,
+				imageUrl: data.server.imageUrl ?? undefined,
 			});
+			setIsUploading(false);
 		}
 	}, [isModelOpen, data?.server, form]);
 
-	const { register, handleSubmit, formState, watch } = form;
+	const isLoading = form.formState.isSubmitting;
 
-	const isLoading = formState.isSubmitting;
-
-	const onSubmit = async (values: z.infer<typeof schema>) => {
-		console.log(values);
+	const onSubmit = async (values: FormValues) => {
 		try {
 			await axios.patch(`/api/servers/${data?.server?.id}`, values);
 			form.reset();
 			router.refresh();
 			onClose();
 		} catch (error) {
-			console.log(error);
+			console.error(error);
 		}
 	};
+
 	const handleClose = () => {
 		form.reset();
+		setIsUploading(false);
 		onClose();
 	};
+
 	return (
-		<Dialog open={isModelOpen} onOpenChange={handleClose}>
-			<DialogContent className="bg-white text-black p-0 overflow-hidden">
+		<Dialog open={isModelOpen} onOpenChange={(open) => !open && handleClose()}>
+			<DialogContent
+				className="bg-white text-black p-0 overflow-hidden"
+				onPointerDownOutside={(event) => isUploading && event.preventDefault()}
+				onInteractOutside={(event) => isUploading && event.preventDefault()}
+			>
 				<DialogHeader className="pt-8 px-6">
-					<DialogTitle className="text-2xl text-center font-bold">Customize your server</DialogTitle>
+					<DialogTitle className="text-2xl text-center font-bold">Edit your server</DialogTitle>
 					<DialogDescription className="text-center text-zinc-500">
-						Give your sever a personality with a name and an image. You can always change these later.
+						Update your server name and icon.
 					</DialogDescription>
 				</DialogHeader>
 				<Form {...form}>
-					<form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-						<div className="space-y-8 px-6">
-							<div className="flex items-center justify-center text-center">
-								<FormField
-									control={form.control}
-									name="imageUrl"
-									render={({ field }) => (
-										<FormItem>
-											<FormControl>
-												{field?.value && field?.value?.split(".").pop() !== "pdf" ? (
-													<div className="relative h-20 w-20">
-														<Image
-															fill
-															objectFit="cover"
-															src={field.value}
-															className="rounded-full"
-															alt="Server Image"
-														/>
-														<Button
-															onClick={() => field.onChange("")}
-															type="button"
-															className="w-7 h-7  p-[.35rem] absolute bg-rose-500 hover:bg-rose-800 text-white top-0 right-0 rounded-full shadow-sm"
-														>
-															<svg
-																xmlns="http://www.w3.org/2000/svg"
-																className="h-6 w-6 "
-																fill="none"
-																viewBox="0 0 24 24"
-																stroke="currentColor"
-															>
-																<path
-																	strokeLinecap="round"
-																	strokeLinejoin="round"
-																	strokeWidth={2}
-																	d="M6 18L18 6M6 6l12 12"
-																/>
-															</svg>
-														</Button>
-													</div>
-												) : (
-													<UploadDropzone
-														className="mt-4  focus-visible:outline-zinc-700
-													focus-visible:outline-dashed
-													ut-button:bg-indigo-500 ut-button:text-white ut-button:hover:bg-indigo-500/90 ut-button:ut-readying:bg-indigo-500/90 ut-button:ut-uploading:bg-indigo-500/90 ut-button:after:bg-indigo-700
-													ut-label:text-zinc-700 ut-allowed-content:text-zinc-500
-													"
-														endpoint="serverImage"
-														onClientUploadComplete={(res) => {
-															field.onChange(res?.[0].url);
-															console.log("Files: ", res);
-															alert("Upload Completed");
-														}}
-														onUploadError={(error: Error) => {
-															console.log("UploadthingERROR\n", error.message);
-
-															alert(`ERROR! ${error.message}`);
-														}}
-														onUploadBegin={(name) => {
-															// Do something once upload begins
-															console.log("Uploading: ", name);
-														}}
-													/>
-												)}
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
-							</div>
+					<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+						<div className="space-y-6 px-6">
+							<FormField
+								control={form.control}
+								name="imageUrl"
+								render={({ field }) => (
+									<FormItem className="flex flex-col items-center">
+										<ServerAvatarPicker
+											value={field.value ?? ""}
+											onChange={(url) => field.onChange(url || undefined)}
+											onUploadingChange={setIsUploading}
+											onError={(message) => {
+												if (message) {
+													form.setError("imageUrl", { message });
+												} else {
+													form.clearErrors("imageUrl");
+												}
+											}}
+											disabled={isLoading}
+										/>
+										<FormMessage className="text-center" />
+									</FormItem>
+								)}
+							/>
 							<FormField
 								control={form.control}
 								name="name"
 								render={({ field }) => (
 									<FormItem>
-										<FormLabel className="uppercase text-xs font-bold text-zinc-500 dark:text-secondary/70">
+										<FormLabel className="uppercase text-xs font-bold text-zinc-500">
 											Server name
 										</FormLabel>
-
 										<FormControl>
 											<Input
 												disabled={isLoading}
@@ -176,14 +135,25 @@ export function EditServerModal() {
 							/>
 						</div>
 						<DialogFooter className="bg-gray-100 px-6 py-4">
-							<Button type="submit" variant="primary" disabled={isLoading} className="w-full">
-								Save
+							<Button
+								type="submit"
+								variant="primary"
+								disabled={isLoading || isUploading}
+								className="w-full"
+							>
+								{isLoading ? (
+									<>
+										<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+										Saving...
+									</>
+								) : (
+									"Save changes"
+								)}
 							</Button>
 						</DialogFooter>
 					</form>
 				</Form>
 			</DialogContent>
-	
 		</Dialog>
 	);
 }
