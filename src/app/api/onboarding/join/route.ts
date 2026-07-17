@@ -1,12 +1,8 @@
 import { NextResponse } from "next/server";
-import { z } from "zod";
 
+import { joinGroupSchema } from "@/lib/onboarding/schema";
 import { prisma } from "@/lib/prismadb";
 import { getCurrentProfile } from "@/lib/query";
-
-const joinSchema = z.object({
-	inviteCode: z.string().min(1, "Invite code is required"),
-});
 
 export async function POST(req: Request) {
 	try {
@@ -16,7 +12,7 @@ export async function POST(req: Request) {
 		}
 
 		const body = await req.json();
-		const parsed = joinSchema.safeParse(body);
+		const parsed = joinGroupSchema.safeParse(body);
 		if (!parsed.success) {
 			return NextResponse.json(
 				{ error: parsed.error.issues[0]?.message ?? "Invalid input" },

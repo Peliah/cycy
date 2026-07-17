@@ -1,24 +1,10 @@
 import { NextResponse } from "next/server";
 import { MemberRole } from "@prisma/client";
 import { v4 as uuidv4 } from "uuid";
-import { z } from "zod";
 
+import { createGroupSchema } from "@/lib/onboarding/schema";
 import { prisma } from "@/lib/prismadb";
 import { getCurrentProfile } from "@/lib/query";
-
-const materialSchema = z.object({
-	fileName: z.string().min(1),
-	fileUrl: z.string().url(),
-	mimeType: z.string().min(1),
-});
-
-const createGroupSchema = z.object({
-	name: z.string().min(1, "Group name is required"),
-	imageUrl: z.string().url().optional().or(z.literal("")),
-	learningGoal: z.string().min(1, "Tell us what you want to learn"),
-	learningReason: z.string().min(1, "Tell us why you're learning"),
-	materials: z.array(materialSchema).min(1, "Upload at least one learning material"),
-});
 
 export async function POST(req: Request) {
 	try {
