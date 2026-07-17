@@ -13,9 +13,19 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 
-import type { CreateGroupValues } from "@/lib/onboarding/schema";
+import {
+	learningReasons,
+	type CreateGroupValues,
+} from "@/lib/onboarding/schema";
 import { StepHeading } from "./step-heading";
 
 type CreateDetailsStepProps = {
@@ -76,16 +86,25 @@ export function CreateDetailsStep({ form, onContinue }: CreateDetailsStepProps) 
 						render={({ field }) => (
 							<FormItem>
 								<FormLabel className="text-[#14201F]">
-									Why are you learning this?
+									What brings you here?
 								</FormLabel>
-								<FormControl>
-									<Textarea
-										placeholder="e.g. Exam prep, retaking a course, self-study"
-										rows={3}
-										className="resize-none border-[#C5D4D2] bg-white"
-										{...field}
-									/>
-								</FormControl>
+								<Select
+									onValueChange={field.onChange}
+									value={field.value || undefined}
+								>
+									<FormControl>
+										<SelectTrigger className="h-11 border-[#C5D4D2] bg-white">
+											<SelectValue placeholder="Choose your reason" />
+										</SelectTrigger>
+									</FormControl>
+									<SelectContent>
+										{learningReasons.map((reason) => (
+											<SelectItem key={reason.value} value={reason.value}>
+												{reason.label}
+											</SelectItem>
+										))}
+									</SelectContent>
+								</Select>
 								<FormMessage />
 							</FormItem>
 						)}

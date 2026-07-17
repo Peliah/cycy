@@ -63,7 +63,7 @@ export function useOnboardingWizard() {
 		defaultValues: {
 			name: "",
 			learningGoal: "",
-			learningReason: "",
+			learningReason: undefined,
 			materials: [],
 		},
 		mode: "onTouched",
