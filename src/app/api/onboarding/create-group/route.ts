@@ -24,46 +24,47 @@ export async function POST(req: Request) {
 
 		const { name, imageUrl, learningGoal, learningReason, materials } = parsed.data;
 
-		const server = await prisma.$transaction(async (tx) => {
-			await tx.profile.update({
-				where: { id: profile.id },
-				data: { onboardingComplete: true },
-			});
+		const server = await prisma.$transaction(
+			async (tx) => {
+				await tx.profile.update({
+					where: { id: profile.id },
+					data: { onboardingComplete: true },
+				});
 
-			const created = await tx.server.create({
-				data: {
-					profileId: profile.id,
-					name,
-					imageUrl: imageUrl || null,
-					learningGoal,
-					learningReason,
-					inviteCode: uuidv4(),
-					channels: {
-						create: [{ name: "general", profileId: profile.id }],
+				return tx.server.create({
+					data: {
+						profileId: profile.id,
+						name,
+						imageUrl: imageUrl || null,
+						learningGoal,
+						learningReason,
+						inviteCode: uuidv4(),
+						channels: {
+							create: [{ name: "general", profileId: profile.id }],
+						},
+						members: {
+							create: [{ role: MemberRole.ADMIN, profileId: profile.id }],
+						},
+						curriculum: {
+							create: { status: "PENDING" },
+						},
+						materials: {
+							create: materials.map((m) => ({
+								fileName: m.fileName,
+								fileUrl: m.fileUrl,
+								mimeType: m.mimeType,
+								status: "UPLOADED",
+							})),
+						},
 					},
-					members: {
-						create: [{ role: MemberRole.ADMIN, profileId: profile.id }],
-					},
-					curriculum: {
-						create: { status: "PENDING" },
-					},
-					materials: {
-						create: materials.map((m) => ({
-							fileName: m.fileName,
-							fileUrl: m.fileUrl,
-							mimeType: m.mimeType,
-							status: "UPLOADED",
-						})),
-					},
-				},
-				include: {
-					curriculum: true,
-					materials: true,
-				},
-			});
-
-			return created;
-		});
+					select: { id: true },
+				});
+			},
+			{
+				maxWait: 10_000,
+				timeout: 20_000,
+			},
+		);
 
 		return NextResponse.json(server);
 	} catch (error) {

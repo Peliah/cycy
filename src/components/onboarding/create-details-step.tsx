@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { ArrowRight } from "lucide-react";
 import type { UseFormReturn } from "react-hook-form";
 
@@ -26,6 +27,7 @@ import {
 	learningReasons,
 	type CreateGroupValues,
 } from "@/lib/onboarding/schema";
+import { GroupAvatarPicker } from "./group-avatar-picker";
 import { StepHeading } from "./step-heading";
 
 type CreateDetailsStepProps = {
@@ -34,6 +36,9 @@ type CreateDetailsStepProps = {
 };
 
 export function CreateDetailsStep({ form, onContinue }: CreateDetailsStepProps) {
+	const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+	const groupName = form.watch("name");
+
 	return (
 		<section className="animate-in fade-in slide-in-from-bottom-2 duration-500">
 			<StepHeading
@@ -43,6 +48,29 @@ export function CreateDetailsStep({ form, onContinue }: CreateDetailsStepProps) 
 
 			<Form {...form}>
 				<form className="mt-10 space-y-6" onSubmit={(e) => e.preventDefault()}>
+					<FormField
+						control={form.control}
+						name="imageUrl"
+						render={({ field }) => (
+							<FormItem>
+								<GroupAvatarPicker
+									value={field.value ?? ""}
+									seedHint={groupName}
+									disabled={isUploadingAvatar}
+									onChange={(url) => field.onChange(url)}
+									onUploadingChange={setIsUploadingAvatar}
+									onError={(message) => {
+										if (message) {
+											form.setError("imageUrl", { message });
+										} else {
+											form.clearErrors("imageUrl");
+										}
+									}}
+								/>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
 					<FormField
 						control={form.control}
 						name="name"
@@ -113,6 +141,7 @@ export function CreateDetailsStep({ form, onContinue }: CreateDetailsStepProps) 
 						<Button
 							type="button"
 							onClick={onContinue}
+							disabled={isUploadingAvatar}
 							className="h-11 bg-[#0A4D4A] px-6 text-white hover:bg-[#083D3B]"
 						>
 							Continue

@@ -62,6 +62,7 @@ export function useOnboardingWizard() {
 		resolver: zodResolver(createGroupSchema),
 		defaultValues: {
 			name: "",
+			imageUrl: "",
 			learningGoal: "",
 			learningReason: undefined,
 			materials: [],
