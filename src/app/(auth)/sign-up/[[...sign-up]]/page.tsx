@@ -1,10 +1,11 @@
 import { SignUp } from "@clerk/nextjs";
-import { authClerkAppearance } from "@/lib/auth-appearance";
+
+import { authClerkAppearance } from "@/lib/clerk-appearance";
 
 export default function SignUpPage() {
 	return (
-		<div className="space-y-6">
-			<div className="hidden space-y-1 lg:block">
+		<div className="w-full max-w-full space-y-6 overflow-hidden">
+			<div className="space-y-1">
 				<h2 className="font-[family-name:var(--font-fraunces)] text-2xl tracking-tight text-[#14201F]">
 					Get started
 				</h2>
