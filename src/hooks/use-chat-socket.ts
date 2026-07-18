@@ -44,10 +44,18 @@ export const useChatSocket = ({ addKey, updateKey, queryKey }: ChatSocketProps) 
 						],
 					};
 				}
+
+				// API pages are createdAt desc; UI uses flex-col-reverse — prepend.
+				const firstPage = oldData.pages[0];
+				const alreadyExists = firstPage.items.some(
+					(item: MessageWithMemberWithProfile) => item.id === message.id,
+				);
+				if (alreadyExists) return oldData;
+
 				const newData = [...oldData.pages];
 				newData[0] = {
-					...newData[0],
-					items: [...newData[0].items, message],
+					...firstPage,
+					items: [message, ...firstPage.items],
 				};
 				return { ...oldData, pages: newData };
 			});

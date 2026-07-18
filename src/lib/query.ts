@@ -1,8 +1,9 @@
 import { prisma } from "@/lib/prismadb";
-import { auth, currentUser,getAuth } from "@clerk/nextjs/server";
+import { auth, currentUser, getAuth } from "@clerk/nextjs/server";
 import { NextApiRequest } from "next";
 import { unstable_noStore as noStore } from "next/cache";
 import { redirect } from "next/navigation";
+import { cache } from "react";
 
 export async function initProfile() {
 	noStore();
@@ -39,7 +40,8 @@ export async function initProfile() {
 	return newProfile;
 }
 
-export async function getCurrentProfile() {
+/** Per-request dedupe for RSC trees (layout + sidebars). */
+export const getCurrentProfile = cache(async () => {
 	const user = await currentUser();
 	if (!user) {
 		const { redirectToSignIn } = await auth();
@@ -52,7 +54,7 @@ export async function getCurrentProfile() {
 		},
 	});
 	if (profile) return profile;
-}
+});
 
 export async function getCurrentProfilePage(req: NextApiRequest) {
 	const authInfo = await getAuth(req);
@@ -69,7 +71,7 @@ export async function getCurrentProfilePage(req: NextApiRequest) {
 	if (profile) return profile;
 }
 
-export async function getServer(id: string, profileId: string) {
+export const getServer = cache(async (id: string, profileId: string) => {
 	const server = await prisma.server.findUnique({
 		where: {
 			id,
@@ -96,7 +98,7 @@ export async function getServer(id: string, profileId: string) {
 		},
 	});
 	if (server) return server;
-}
+});
 
 export async function getGeneralServer(id: string, profileId: string) {
 	const server = await prisma.server.findUnique({
@@ -123,7 +125,7 @@ export async function getGeneralServer(id: string, profileId: string) {
 	if (server) return server;
 }
 
-export async function getAllServers(id: string) {
+export const getAllServers = cache(async (id: string) => {
 	const servers = await prisma.server.findMany({
 		where: {
 			members: {
@@ -134,7 +136,7 @@ export async function getAllServers(id: string) {
 		},
 	});
 	if (servers) return servers;
-}
+});
 
 export async function getFirstServer(id: string) {
 	const server = await prisma.server.findFirst({

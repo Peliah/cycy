@@ -7,9 +7,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { useStore } from "@/store/store";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { Plus, SendHorizonal, Type } from "lucide-react";
-import { useRouter } from "next/navigation";
 import qs from "query-string";
 import {
 	useLayoutEffect,
@@ -43,7 +43,7 @@ function resizeTextarea(textarea: HTMLTextAreaElement | null) {
 }
 
 export function ChatInput({ apiUrl, query, name, type }: ChatInputProps) {
-	const router = useRouter();
+	const queryClient = useQueryClient();
 	const onOpen = useStore.use.onOpen();
 	const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 	const [showFormatting, setShowFormatting] = useState(true);
@@ -71,7 +71,12 @@ export function ChatInput({ apiUrl, query, name, type }: ChatInputProps) {
 			await axios.post(url, values);
 			form.reset();
 			requestAnimationFrame(() => resizeTextarea(textareaRef.current));
-			router.refresh();
+
+			// Ensure sender sees the message even if the socket emit is missed.
+			const chatId = query.channelId ?? query.conversationId;
+			if (chatId) {
+				await queryClient.invalidateQueries({ queryKey: [`chat:${chatId}`] });
+			}
 		} catch (error) {
 			console.error(error);
 		}

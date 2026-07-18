@@ -5,15 +5,20 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { getAllServers, getCurrentProfile } from "@/lib/query";
 import { UserButton } from "@clerk/nextjs";
+import type { Server } from "@prisma/client";
 import { redirect } from "next/navigation";
 
-export async function SideBar() {
+interface SideBarProps {
+	servers?: Server[];
+}
+
+export async function SideBar({ servers: serversProp }: SideBarProps = {}) {
 	const profile = await getCurrentProfile();
-	if (!profile) {
+	if (!profile || !("id" in profile)) {
 		return redirect("/");
 	}
 
-	const servers = await getAllServers(profile.id);
+	const servers = serversProp ?? (await getAllServers(profile.id));
 
 	return (
 		<div className="flex h-full w-full flex-col items-center space-y-4 bg-shell-rail py-3 text-foreground">

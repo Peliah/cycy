@@ -10,8 +10,13 @@ import { ChannelType, MemberRole } from "@prisma/client";
 import { Hash, Mic, ShieldAlert, ShieldCheck, Video } from "lucide-react";
 import { redirect } from "next/navigation";
 
+type ServerPayload = NonNullable<Awaited<ReturnType<typeof getServer>>>;
+
 interface ServerSideBarProps {
 	serverId: string;
+	/** When provided (from layout), skips a second getServer in this tree. */
+	server?: ServerPayload;
+	profileId?: string;
 }
 
 const iconMap = {
@@ -26,33 +31,42 @@ const roleIconMap = {
 	[MemberRole.MODERATOR]: <ShieldCheck className="mr-2 h-4 w-4 text-shell-accent" />,
 };
 
-export async function ServerSideBar({ serverId }: ServerSideBarProps) {
-	const profile = await getCurrentProfile();
-	if (!profile) {
+export async function ServerSideBar({
+	serverId,
+	server: serverProp,
+	profileId: profileIdProp,
+}: ServerSideBarProps) {
+	let profileId = profileIdProp;
+	let server = serverProp;
+
+	if (!server || !profileId) {
+		const profile = await getCurrentProfile();
+		if (!profile || !("id" in profile)) {
+			return redirect("/");
+		}
+		profileId = profile.id;
+		server = server ?? (await getServer(serverId, profileId));
+	}
+
+	if (!server || !profileId) {
 		return redirect("/");
 	}
 
-	const server = await getServer(serverId, profile.id);
-
-	const textChannels = server?.channels.filter(
+	const textChannels = server.channels.filter(
 		(channel) => channel.type === ChannelType.TEXT,
 	);
-	const audioChannels = server?.channels.filter(
+	const audioChannels = server.channels.filter(
 		(channel) => channel.type === ChannelType.AUDIO,
 	);
-	const videoChannels = server?.channels.filter(
+	const videoChannels = server.channels.filter(
 		(channel) => channel.type === ChannelType.VIDEO,
 	);
-	const members = server?.members.filter(
-		(member) => member.profileId !== profile.id,
+	const members = server.members.filter(
+		(member) => member.profileId !== profileId,
 	);
 
-	if (!server) {
-		return redirect("/");
-	}
-
-	const role = server?.members?.find(
-		(member) => member.profileId === profile.id,
+	const role = server.members.find(
+		(member) => member.profileId === profileId,
 	)?.role;
 
 	return (

@@ -148,10 +148,10 @@ export function useOnboardingWizard() {
 	const submitCreate = createForm.handleSubmit(async (values) => {
 		setError(null);
 		try {
-			const { data } = await axios.post<{ id: string }>(
-				"/api/onboarding/create-group",
-				values,
-			);
+			const { data } = await axios.post<{
+				id: string;
+				curriculumStatus?: string;
+			}>("/api/onboarding/create-group", values);
 			router.push(`/servers/${data.id}`);
 			router.refresh();
 		} catch (err) {
