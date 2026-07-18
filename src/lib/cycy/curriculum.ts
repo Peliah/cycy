@@ -66,7 +66,7 @@ export async function pollCurriculum(
 	serverId: string,
 	options: PollCurriculumOptions = {},
 ): Promise<CurriculumStatusResponse> {
-	const intervalMs = options.intervalMs ?? 2500;
+	const intervalMs = options.intervalMs ?? 5000;
 	const timeoutMs = options.timeoutMs ?? 5 * 60_000;
 	const started = Date.now();
 

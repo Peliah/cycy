@@ -12,7 +12,7 @@ import {
 import type { CurriculumLifecycleStatus } from "@/lib/cycy/types";
 import { cn } from "@/lib/utils";
 
-const POLL_MS = 2500;
+const POLL_MS = 5000;
 
 export function CurriculumStatusBanner({
 	serverId,
