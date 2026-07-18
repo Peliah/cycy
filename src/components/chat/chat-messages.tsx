@@ -106,6 +106,7 @@ export function ChatMessages({
 								id={message.id}
 								currentMember={member}
 								member={message.member}
+								authorType={message.authorType}
 								isUpdated={message.updatedAt !== message.createdAt}
 								content={message.content}
 								fileUrl={message.fileUrl}

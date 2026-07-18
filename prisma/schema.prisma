@@ -35,12 +35,16 @@ model Server {
   inviteCode     String    @unique
   learningGoal   String?   @db.Text
   learningReason String?   @db.Text
+  /// Nest agent handle e.g. @AlgebraAgent — set from curriculum/concepts
+  agentHandle    String?
+  agentName      String?
   profileId      String
   profile        Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
   members        Member[]
   channels       Channel[]
   materials      LearningMaterial[]
   curriculum     Curriculum?
+  learningSessions LearningSession[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -63,6 +67,7 @@ model Member {
   moduleProgress       ModuleProgress[]
   quizAttempts         QuizAttempt[]
   certificates         Certificate[]
+  learningSessions     LearningSession[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -94,14 +99,16 @@ model Channel {
 }
 
 model Message {
-  id        String  @id @default(cuid())
-  content   String  @db.Text
-  fileUrl   String? @db.Text
-  deleted   Boolean @default(false)
-  memberId  String
-  member    Member  @relation(fields: [memberId], references: [id], onDelete: Cascade)
-  channelId String
-  channel   Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  id         String            @id @default(cuid())
+  content    String            @db.Text
+  fileUrl    String?           @db.Text
+  deleted    Boolean           @default(false)
+  authorType MessageAuthorType @default(USER)
+  /// Null when authorType is AI_AGENT or SYSTEM
+  memberId   String?
+  member     Member?           @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  channelId  String
+  channel    Channel           @relation(fields: [channelId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -177,11 +184,15 @@ model Curriculum {
 
 model Module {
   id               String           @id @default(cuid())
+  /// Nest module id — links to Channel.externalModuleId
+  externalId       String?
   curriculumId     String
   curriculum       Curriculum       @relation(fields: [curriculumId], references: [id], onDelete: Cascade)
   order            Int
   title            String
   content          String           @db.Text
+  /// Nest concepts payload (study units, etc.) for the Study tab
+  conceptsJson     Json?
   xpReward         Int              @default(100)
   timeLimitMinutes Int              @default(60)
   progress         ModuleProgress[]
@@ -192,6 +203,7 @@ model Module {
 
   @@index([curriculumId])
   @@unique([curriculumId, order])
+  @@unique([curriculumId, externalId])
 }
 
 model ModuleProgress {
@@ -383,4 +395,27 @@ enum NotificationType {
   PEER_ONLINE
   LEADERBOARD
   SYSTEM
+}
+
+enum MessageAuthorType {
+  USER
+  AI_AGENT
+  SYSTEM
+}
+
+/// Backend-only Nest conversation id per member — not a DM UI
+model LearningSession {
+  id            String  @id @default(cuid())
+  serverId      String
+  server        Server  @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  memberId      String
+  member        Member  @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  lastChannelId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([serverId, memberId])
+  @@index([serverId])
+  @@index([memberId])
 }

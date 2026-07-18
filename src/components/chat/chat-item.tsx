@@ -9,9 +9,9 @@ import { UserAvatar } from "@/components/user/user-avatar";
 import { cn } from "@/lib/utils";
 import { useStore } from "@/store/store";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Member, MemberRole, Profile } from "@prisma/client";
+import { Member, MemberRole, MessageAuthorType, Profile } from "@prisma/client";
 import axios from "axios";
-import { Edit, FileText, ShieldAlert, ShieldCheck, Trash } from "lucide-react";
+import { Bot, Edit, FileText, ShieldAlert, ShieldCheck, Trash } from "lucide-react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import qs from "query-string";
@@ -22,7 +22,8 @@ import z from "zod";
 interface ChatItemProps {
 	id: string;
 	content: string;
-	member: Member & { profile: Profile };
+	member: (Member & { profile: Profile }) | null;
+	authorType?: MessageAuthorType;
 	timestamp: string;
 	fileUrl: string | null;
 	deleted: boolean;
@@ -46,6 +47,7 @@ export function ChatItem({
 	id,
 	content,
 	member,
+	authorType = MessageAuthorType.USER,
 	timestamp,
 	fileUrl,
 	deleted,
@@ -59,11 +61,23 @@ export function ChatItem({
 	const router = useRouter();
 	const params = useParams();
 
+	const isAgent =
+		authorType === MessageAuthorType.AI_AGENT ||
+		authorType === MessageAuthorType.SYSTEM ||
+		!member;
+	const displayName =
+		authorType === MessageAuthorType.SYSTEM
+			? "System"
+			: isAgent
+				? "Agent"
+				: (member?.profile.name ?? "Member");
+
 	const isAdmin = currentMember.role === MemberRole.ADMIN;
 	const isModerator = currentMember.role === MemberRole.MODERATOR;
-	const isOwner = currentMember.id === member.id;
-	const canDeleteMessage = !deleted && (isAdmin || isModerator || isOwner);
-	const canEditMessage = !deleted && isOwner && !fileUrl;
+	const isOwner = Boolean(member && currentMember.id === member.id);
+	const canDeleteMessage =
+		!deleted && !isAgent && (isAdmin || isModerator || isOwner);
+	const canEditMessage = !deleted && !isAgent && isOwner && !fileUrl;
 	const isPDF = fileUrl?.endsWith(".pdf") && fileUrl;
 	const isImage = fileUrl && !isPDF;
 
@@ -81,7 +95,7 @@ export function ChatItem({
 	}, [content, form]);
 
 	useEffect(() => {
-		const handleKeyDown = (event: any) => {
+		const handleKeyDown = (event: KeyboardEvent) => {
 			if (event.key === "Escape" || event.keyCode === 27) {
 				setIsEditing(false);
 			}
@@ -102,38 +116,58 @@ export function ChatItem({
 			await axios.patch(url, values);
 			form.reset();
 			setIsEditing(false);
-			// router.refresh();
 		} catch (error) {
 			console.error(error);
 		}
 	};
 
 	const onMemberClick = () => {
-		if(member?.id === currentMember.id) return;
+		if (!member || member.id === currentMember.id) return;
 		router.push(`/servers/${params?.serverId}/conversations/${member.id}`);
-	}
+	};
 
 	return (
-		<div className="group relative flex w-full items-center p-4 transition hover:bg-shell-hover/60">
+		<div
+			className={cn(
+				"group relative flex w-full items-center p-4 transition hover:bg-shell-hover/60",
+				isAgent && "bg-[#0A4D4A]/4",
+			)}
+		>
 			<div className="group flex w-full items-start gap-x-2">
-				<div
-					onClick={onMemberClick}
-					className="cursor-pointer transition hover:opacity-90"
-				>
-					<UserAvatar src={member.profile.imageUrl ?? undefined} />
-				</div>
+				{isAgent ? (
+					<div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#0A4D4A]/15 text-[#0A4D4A]">
+						<Bot className="size-5" />
+					</div>
+				) : (
+					<div
+						onClick={onMemberClick}
+						className="cursor-pointer transition hover:opacity-90"
+					>
+						<UserAvatar src={member?.profile.imageUrl ?? undefined} />
+					</div>
+				)}
 				<div className="flex w-full flex-col">
 					<div className="flex items-center gap-x-2">
 						<div className="flex items-center">
-							<p
-								onClick={onMemberClick}
-								className="cursor-pointer text-sm font-semibold text-foreground hover:underline"
-							>
-								{member.profile.name}
-							</p>
-							<ActionTooltip label={member.role}>
-								{roleIconMap[member.role]}
-							</ActionTooltip>
+							{isAgent ? (
+								<p className="text-sm font-semibold text-[#0A4D4A]">
+									{displayName}
+								</p>
+							) : (
+								<>
+									<p
+										onClick={onMemberClick}
+										className="cursor-pointer text-sm font-semibold text-foreground hover:underline"
+									>
+										{displayName}
+									</p>
+									{member && (
+										<ActionTooltip label={member.role}>
+											{roleIconMap[member.role]}
+										</ActionTooltip>
+									)}
+								</>
+							)}
 						</div>
 						<span className="text-xs text-shell-muted">{timestamp}</span>
 					</div>
@@ -170,7 +204,8 @@ export function ChatItem({
 								<ChatMarkdown content={content} />
 							)}
 							{isUpdated && !deleted && (
-								<span className="ml-1 text-[10px] text-shell-muted">
+								<span className="text-[10px] text-shell-muted">
+									{" "}
 									(edited)
 								</span>
 							)}

@@ -30,9 +30,9 @@ export default async function ServerIdLayout({
 		select: { status: true },
 	});
 
-	// Pull full Nest curriculum content on server entry (409 if not READY yet).
-	// Syncs module channels for the sidebar; Nest errors never break the layout.
-	if (curriculum?.status !== "FAILED") {
+	// Pull Nest content only when READY (Nest returns 409/500 otherwise).
+	// Syncs modules + channels; Nest errors never break the layout.
+	if (curriculum?.status === "READY") {
 		const contentResult = await loadCurriculumContentForServer(serverId);
 		if (contentResult.loaded) {
 			// Bypass getServer() React cache so sidebar sees newly upserted channels.

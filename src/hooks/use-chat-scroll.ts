@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 
 type ChatScrollProps = {
-	chatRef: React.RefObject<HTMLDivElement>;
-	bottomRef: React.RefObject<HTMLDivElement>;
+	chatRef: React.RefObject<HTMLDivElement | null>;
+	bottomRef: React.RefObject<HTMLDivElement | null>;
 	shouldLoadMore: boolean;
 	loadMore: () => void;
-	latestMessageId: string;
+	latestMessageId: string | undefined;
 };
 
 export const useChatScroll = ({ chatRef, bottomRef, shouldLoadMore, loadMore, latestMessageId }: ChatScrollProps) => {

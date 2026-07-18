@@ -1,4 +1,5 @@
 import { ChatVideoButton } from "@/components/chat/chat-video-button";
+import { LearningRoadmapButton } from "@/components/learning/learning-roadmap";
 import { MobileToggle } from "@/components/mobile-toggle";
 import { SocketIndicator } from "@/components/socket-indicator";
 import { UserAvatar } from "@/components/user/user-avatar";
@@ -26,6 +27,7 @@ export function ChatHeader({ name, type, imageUrl, serverId }: ChatHeaderProps) 
 			</p>
 			<div className="ml-auto flex items-center gap-2">
 				{type === "conversation" && <ChatVideoButton />}
+				<LearningRoadmapButton serverId={serverId} />
 				<SocketIndicator />
 			</div>
 		</div>

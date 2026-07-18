@@ -25,6 +25,7 @@ interface ChatInputProps {
 	query: Record<string, string>;
 	name: string;
 	type: "conversation" | "channel";
+	placeholder?: string;
 }
 
 const formSchema = z.object({
@@ -42,7 +43,13 @@ function resizeTextarea(textarea: HTMLTextAreaElement | null) {
 		textarea.scrollHeight > TEXTAREA_MAX_HEIGHT ? "auto" : "hidden";
 }
 
-export function ChatInput({ apiUrl, query, name, type }: ChatInputProps) {
+export function ChatInput({
+	apiUrl,
+	query,
+	name,
+	type,
+	placeholder: placeholderProp,
+}: ChatInputProps) {
 	const queryClient = useQueryClient();
 	const onOpen = useStore.use.onOpen();
 	const textareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -83,7 +90,8 @@ export function ChatInput({ apiUrl, query, name, type }: ChatInputProps) {
 	};
 
 	const placeholder =
-		type === "conversation" ? `Message ${name}` : `Message #${name}`;
+		placeholderProp ??
+		(type === "conversation" ? `Message ${name}` : `Message #${name}`);
 
 	return (
 		<div className="bg-shell-chat px-4 pb-5 pt-2">

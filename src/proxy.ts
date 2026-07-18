@@ -7,6 +7,8 @@ const isPublicRoute = createRouteMatcher([
 	"/api/uploadthing(.*)",
 	// Socket.IO handshake + polling — auth is enforced inside message handlers
 	"/api/socket(.*)",
+	// Nest → frontend agent webhook — auth via X-Internal-Secret
+	"/api/internal/agent-response(.*)",
 ]);
 
 export default clerkMiddleware(async (auth, request) => {

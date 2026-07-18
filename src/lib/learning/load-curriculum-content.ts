@@ -1,6 +1,7 @@
 import { CycyApiError } from "@/lib/cycy/client";
 import { getCycyClient } from "@/lib/cycy/server";
 import type { CurriculumContentResponse } from "@/lib/cycy/types";
+import { persistCurriculumContent } from "@/lib/learning/persist-curriculum-content";
 import { syncModuleChannels } from "@/lib/learning/sync-module-channels";
 import { prisma } from "@/lib/prismadb";
 
@@ -11,6 +12,7 @@ export type LoadCurriculumContentResult =
 			loaded: true;
 			content: CurriculumContentResponse;
 			upserted: number;
+			modulesUpserted: number;
 	  }
 	| {
 			loaded: false;
@@ -20,7 +22,7 @@ export type LoadCurriculumContentResult =
 	  };
 
 /**
- * Fetch Nest curriculum content for a server and mirror module channels.
+ * Fetch Nest curriculum content, persist modules/quizzes, sync module channels.
  * Safe to call on every server layout load — 409/not-ready is not an error.
  */
 export async function loadCurriculumContentForServer(
@@ -41,12 +43,17 @@ export async function loadCurriculumContentForServer(
 			},
 		});
 
+		const { modulesUpserted } = await persistCurriculumContent(
+			serverId,
+			content,
+		);
 		const { upserted } = await syncModuleChannels(serverId, content.modules);
+
 		console.info(
-			`[curriculum/content] loaded ${content.modules.length} modules, upserted ${upserted} channels`,
+			`[curriculum/content] modules=${modulesUpserted} channels=${upserted}`,
 		);
 
-		return { loaded: true, content, upserted };
+		return { loaded: true, content, upserted, modulesUpserted };
 	} catch (error) {
 		if (error instanceof CycyApiError && error.status === 409) {
 			const body = error.body;
