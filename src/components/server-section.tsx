@@ -12,6 +12,8 @@ interface ServerSectionProps {
 	sectionType: "channels" | "members";
 	channelType?: ChannelType;
 	server?: ServerWithMembersWithProfiles;
+	/** Hide the create-channel control (e.g. system Modules section). */
+	allowCreate?: boolean;
 }
 
 export function ServerSection({
@@ -20,6 +22,7 @@ export function ServerSection({
 	sectionType,
 	channelType,
 	server,
+	allowCreate = true,
 }: ServerSectionProps) {
 	const onOpen = useStore.use.onOpen();
 
@@ -28,7 +31,9 @@ export function ServerSection({
 			<p className="text-[11px] font-semibold uppercase tracking-wide text-shell-muted">
 				{label}
 			</p>
-			{role !== MemberRole.GUEST && sectionType === "channels" && (
+			{allowCreate &&
+				role !== MemberRole.GUEST &&
+				sectionType === "channels" && (
 				<ActionTooltip label="Create Channel" side="top">
 					<button
 						type="button"

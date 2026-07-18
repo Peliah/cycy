@@ -1,8 +1,24 @@
-import { z } from "zod";
+import {
+	createGroupSchema,
+	joinGroupSchema,
+	type CreateGroupValues,
+	type JoinGroupValues,
+	type MaterialItem,
+} from "@/lib/onboarding/schema";
 
-export const createServerSchema = z.object({
-	name: z.string().min(1, { message: "Server name is required" }),
-	imageUrl: z.string().optional(),
-});
+/** Create tab — same contract as onboarding create-group. */
+export const createServerSchema = createGroupSchema;
+export type CreateServerFormValues = CreateGroupValues;
+export type { MaterialItem };
 
-export type CreateServerFormValues = z.infer<typeof createServerSchema>;
+/** Join tab */
+export const joinServerSchema = joinGroupSchema;
+export type JoinServerFormValues = JoinGroupValues;
+
+export const CREATE_SERVER_DEFAULTS: CreateServerFormValues = {
+	name: "",
+	imageUrl: "",
+	learningGoal: "",
+	learningReason: "SELF_STUDY",
+	materials: [],
+};

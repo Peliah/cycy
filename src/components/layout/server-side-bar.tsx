@@ -7,7 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { getCurrentProfile, getServer } from "@/lib/query";
 import { ChannelType, MemberRole } from "@prisma/client";
-import { Hash, Mic, ShieldAlert, ShieldCheck, Video } from "lucide-react";
+import { BookOpen, Hash, Mic, ShieldAlert, ShieldCheck, Video } from "lucide-react";
 import { redirect } from "next/navigation";
 
 type ServerPayload = NonNullable<Awaited<ReturnType<typeof getServer>>>;
@@ -52,8 +52,13 @@ export async function ServerSideBar({
 		return redirect("/");
 	}
 
+	const moduleChannels = server.channels
+		.filter((channel) => Boolean(channel.externalModuleId))
+		.sort((a, b) => (a.moduleOrder ?? 0) - (b.moduleOrder ?? 0));
+
 	const textChannels = server.channels.filter(
-		(channel) => channel.type === ChannelType.TEXT,
+		(channel) =>
+			channel.type === ChannelType.TEXT && !channel.externalModuleId,
 	);
 	const audioChannels = server.channels.filter(
 		(channel) => channel.type === ChannelType.AUDIO,
@@ -79,8 +84,17 @@ export async function ServerSideBar({
 							{
 								label: "Text Channels",
 								type: "channel",
-								data: textChannels?.map((channel) => ({
+								data: textChannels.map((channel) => ({
 									icon: iconMap[channel.type],
+									id: channel.id,
+									name: channel.name,
+								})),
+							},
+							{
+								label: "Modules",
+								type: "channel",
+								data: moduleChannels.map((channel) => ({
+									icon: <BookOpen className="mr-2 h-4 w-4" />,
 									id: channel.id,
 									name: channel.name,
 								})),
@@ -88,7 +102,7 @@ export async function ServerSideBar({
 							{
 								label: "Voice Channels",
 								type: "channel",
-								data: audioChannels?.map((channel) => ({
+								data: audioChannels.map((channel) => ({
 									icon: iconMap[channel.type],
 									id: channel.id,
 									name: channel.name,
@@ -97,7 +111,7 @@ export async function ServerSideBar({
 							{
 								label: "Video Channels",
 								type: "channel",
-								data: videoChannels?.map((channel) => ({
+								data: videoChannels.map((channel) => ({
 									icon: iconMap[channel.type],
 									id: channel.id,
 									name: channel.name,
@@ -106,7 +120,7 @@ export async function ServerSideBar({
 							{
 								label: "Members",
 								type: "member",
-								data: members?.map((member) => ({
+								data: members.map((member) => ({
 									icon: roleIconMap[member.role],
 									id: member.id,
 									name: member.profile.name,
@@ -116,7 +130,7 @@ export async function ServerSideBar({
 					/>
 				</div>
 				<Separator className="my-2 bg-shell-border" />
-				{!!textChannels?.length && (
+				{!!textChannels.length && (
 					<div className="mb-3">
 						<ServerSection
 							sectionType="channels"
@@ -126,6 +140,27 @@ export async function ServerSideBar({
 						/>
 						<div className="mt-1 flex flex-col gap-0.5">
 							{textChannels.map((channel) => (
+								<ServerChannel
+									key={channel.id}
+									channel={channel}
+									server={server}
+									role={role}
+								/>
+							))}
+						</div>
+					</div>
+				)}
+				{!!moduleChannels.length && (
+					<div className="mb-3">
+						<ServerSection
+							sectionType="channels"
+							channelType={ChannelType.TEXT}
+							role={role}
+							label="Modules"
+							allowCreate={false}
+						/>
+						<div className="mt-1 flex flex-col gap-0.5">
+							{moduleChannels.map((channel) => (
 								<ServerChannel
 									key={channel.id}
 									channel={channel}

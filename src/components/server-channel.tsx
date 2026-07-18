@@ -2,8 +2,24 @@
 
 import { ActionTooltip } from "@/components/ui/action-tooltip";
 import { cn } from "@/lib/utils";
-import { Channel, ChannelType, MemberRole, Server } from "@prisma/client";
-import { Edit, Hash, Lock, Mic, Trash, Video } from "lucide-react";
+import {
+	Channel,
+	ChannelType,
+	MemberRole,
+	ModuleProgressStatus,
+	Server,
+} from "@prisma/client";
+import {
+	BookOpen,
+	CheckCircle2,
+	CircleDot,
+	Edit,
+	Hash,
+	Lock,
+	Mic,
+	Trash,
+	Video,
+} from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import type React from "react";
 import { useStore } from "@/store/store";
@@ -15,18 +31,33 @@ interface ServerChannelParams {
 	role?: MemberRole;
 }
 
-const iconMap = {
+const typeIconMap = {
 	[ChannelType.TEXT]: Hash,
 	[ChannelType.AUDIO]: Mic,
 	[ChannelType.VIDEO]: Video,
 };
+
+const moduleStatusIconMap = {
+	[ModuleProgressStatus.LOCKED]: Lock,
+	[ModuleProgressStatus.AVAILABLE]: BookOpen,
+	[ModuleProgressStatus.IN_PROGRESS]: CircleDot,
+	[ModuleProgressStatus.COMPLETED]: CheckCircle2,
+} as const;
+
+function isModuleChannel(channel: Channel) {
+	return Boolean(channel.externalModuleId);
+}
 
 export function ServerChannel({ channel, server, role }: ServerChannelParams) {
 	const onOpen = useStore.use.onOpen();
 	const router = useRouter();
 	const params = useParams();
 	const isActive = params?.channelId === channel.id;
-	const Icon = iconMap[channel.type];
+	const moduleChannel = isModuleChannel(channel);
+
+	const Icon = moduleChannel
+		? moduleStatusIconMap[channel.moduleStatus ?? ModuleProgressStatus.LOCKED]
+		: typeIconMap[channel.type];
 
 	const onClick = () => {
 		router.push(`/servers/${params?.serverId}/channels/${channel.id}`);
@@ -36,6 +67,11 @@ export function ServerChannel({ channel, server, role }: ServerChannelParams) {
 		e.stopPropagation();
 		onOpen(action, { server, channel });
 	};
+
+	const canManage =
+		!moduleChannel &&
+		channel.name !== "general" &&
+		role !== MemberRole.GUEST;
 
 	return (
 		<button
@@ -50,6 +86,9 @@ export function ServerChannel({ channel, server, role }: ServerChannelParams) {
 				className={cn(
 					"size-4 shrink-0 text-shell-muted",
 					isActive && "text-shell-accent",
+					moduleChannel &&
+						channel.moduleStatus === ModuleProgressStatus.COMPLETED &&
+						"text-shell-accent",
 				)}
 			/>
 			<p
@@ -60,7 +99,7 @@ export function ServerChannel({ channel, server, role }: ServerChannelParams) {
 			>
 				{channel.name}
 			</p>
-			{channel.name !== "general" && role !== MemberRole.GUEST && (
+			{canManage && (
 				<div className="ml-auto flex items-center gap-x-1.5">
 					<ActionTooltip label="Edit">
 						<Edit

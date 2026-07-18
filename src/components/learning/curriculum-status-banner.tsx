@@ -1,7 +1,8 @@
 "use client";
 
 import { Loader2, RefreshCw, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -12,7 +13,15 @@ import {
 import type { CurriculumLifecycleStatus } from "@/lib/cycy/types";
 import { cn } from "@/lib/utils";
 
-const POLL_MS = 5000;
+const POLL_MS = 10_000;
+
+async function syncModuleChannels(serverId: string) {
+	try {
+		await fetch(`/api/servers/${serverId}/sync-modules`, { method: "POST" });
+	} catch (error) {
+		console.error(error, "SYNC MODULE CHANNELS CLIENT ERROR");
+	}
+}
 
 export function CurriculumStatusBanner({
 	serverId,
@@ -21,6 +30,7 @@ export function CurriculumStatusBanner({
 	serverId: string;
 	initialStatus?: CurriculumLifecycleStatus | null;
 }) {
+	const router = useRouter();
 	const [status, setStatus] = useState<CurriculumLifecycleStatus>(
 		initialStatus ?? "PENDING",
 	);
@@ -35,6 +45,13 @@ export function CurriculumStatusBanner({
 		const controller = new AbortController();
 		let cancelled = false;
 
+		const markReady = async () => {
+			await syncModuleChannels(serverId);
+			if (cancelled) return;
+			setDismissed(true);
+			router.refresh();
+		};
+
 		const run = async () => {
 			try {
 				let latest = await fetchCurriculum(serverId);
@@ -45,7 +62,7 @@ export function CurriculumStatusBanner({
 				setError(null);
 
 				if (latest.status === "READY") {
-					setDismissed(true);
+					await markReady();
 					return;
 				}
 
@@ -57,7 +74,7 @@ export function CurriculumStatusBanner({
 						setStatus(latest.status);
 						setSummary(latest.summary);
 						if (latest.status === "READY") {
-							setDismissed(true);
+							await markReady();
 							return;
 						}
 					} catch (bootError) {
@@ -93,7 +110,7 @@ export function CurriculumStatusBanner({
 					setSummary(latest.summary);
 					setError(null);
 					if (latest.status === "READY") {
-						setDismissed(true);
+						await markReady();
 						return;
 					}
 				}
@@ -113,7 +130,20 @@ export function CurriculumStatusBanner({
 			cancelled = true;
 			controller.abort();
 		};
-	}, [serverId, dismissed, retryNonce]);
+	}, [serverId, dismissed, retryNonce, router]);
+
+	const syncedReadyServer = useRef<string | null>(null);
+
+	// Already READY (e.g. returning user) — ensure module channels exist once per server.
+	useEffect(() => {
+		if (initialStatus !== "READY") return;
+		if (syncedReadyServer.current === serverId) return;
+		syncedReadyServer.current = serverId;
+		void (async () => {
+			await syncModuleChannels(serverId);
+			router.refresh();
+		})();
+	}, [initialStatus, serverId, router]);
 
 	const onRetry = () => {
 		setDismissed(false);

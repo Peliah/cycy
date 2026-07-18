@@ -7,6 +7,7 @@ import {
 } from "@/lib/cache/redis";
 import { cycyErrorResponse, getCycyClient } from "@/lib/cycy/server";
 import type { CurriculumLifecycleStatus } from "@/lib/cycy/types";
+import { syncModuleChannels } from "@/lib/learning/sync-module-channels";
 import { prisma } from "@/lib/prismadb";
 
 function toPrismaStatus(status: CurriculumLifecycleStatus): CurriculumStatus {
@@ -24,6 +25,33 @@ function toPrismaStatus(status: CurriculumLifecycleStatus): CurriculumStatus {
 	}
 }
 
+async function mirrorReadyCurriculum(
+	serverId: string,
+	status: CurriculumLifecycleStatus,
+	summary: string | null,
+	modules: Parameters<typeof syncModuleChannels>[1],
+) {
+	await prisma.curriculum
+		.updateMany({
+			where: { serverId },
+			data: {
+				status: toPrismaStatus(status),
+				...(summary ? { summary } : {}),
+			},
+		})
+		.catch((error) => {
+			console.error(error, "CURRICULUM LOCAL SYNC ERROR");
+		});
+
+	if (status !== "READY") return;
+
+	try {
+		await syncModuleChannels(serverId, modules);
+	} catch (error) {
+		console.error(error, "MODULE CHANNEL SYNC ERROR");
+	}
+}
+
 /** GET /api/cycy/servers/:serverId/curriculum → Cycy curriculum status */
 export async function GET(
 	_req: Request,
@@ -37,23 +65,24 @@ export async function GET(
 
 		const cached = await getCachedReadyCurriculum(serverId);
 		if (cached) {
+			await mirrorReadyCurriculum(
+				serverId,
+				cached.status,
+				cached.summary,
+				cached.modules,
+			);
 			return NextResponse.json(cached);
 		}
 
 		const client = await getCycyClient();
 		const data = await client.getCurriculum(serverId);
 
-		await prisma.curriculum
-			.updateMany({
-				where: { serverId },
-				data: {
-					status: toPrismaStatus(data.status),
-					...(data.summary ? { summary: data.summary } : {}),
-				},
-			})
-			.catch((error) => {
-				console.error(error, "CURRICULUM LOCAL SYNC ERROR");
-			});
+		await mirrorReadyCurriculum(
+			serverId,
+			data.status,
+			data.summary,
+			data.modules,
+		);
 
 		if (data.status === "READY") {
 			await setCachedReadyCurriculum(serverId, data);
