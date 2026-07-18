@@ -93,19 +93,30 @@ export async function persistCurriculumContent(
 	}
 
 	let agentHandle: string | null = null;
+	let agentName: string | null = null;
 	try {
 		const { getCycyClient } = await import("@/lib/cycy/server");
 		const client = await getCycyClient();
 		const concepts = await client.listConcepts(serverId);
 		agentHandle = normalizeHandle(concepts.agentHandle);
+		agentName =
+			typeof concepts.subject === "string" && concepts.subject.trim()
+				? concepts.subject.trim()
+				: null;
 	} catch {
 		// Concepts endpoint optional — content alone is enough
+	}
+
+	// Fallback so @mentions can work even if concepts API omits handle
+	if (!agentHandle) {
+		agentHandle = "@Agent";
 	}
 
 	await prisma.server.update({
 		where: { id: serverId },
 		data: {
-			...(agentHandle ? { agentHandle } : {}),
+			agentHandle,
+			...(agentName ? { agentName } : {}),
 			...(content.learningGoal ? { learningGoal: content.learningGoal } : {}),
 			...(typeof content.learningReason === "string"
 				? { learningReason: content.learningReason }

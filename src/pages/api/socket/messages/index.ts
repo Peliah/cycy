@@ -1,7 +1,11 @@
 import { NextApiRequest } from "next";
 import { MessageAuthorType } from "@prisma/client";
 
-import { messageMentionsAgent } from "@/lib/learning/agent-mention";
+import {
+	extractMentions,
+	messageMentionsAgent,
+	mentionMatchesHandle,
+} from "@/lib/learning/agent-mention";
 import { triggerAgentProcess } from "@/lib/learning/trigger-agent-process";
 import { prisma } from "@/lib/prismadb";
 import { getCurrentProfilePage } from "@/lib/query";
@@ -83,8 +87,19 @@ export default async function handler(
 		res?.socket?.server?.io?.emit(channelKey, message);
 
 		if (messageMentionsAgent(content, server.agentHandle)) {
+			const typed = extractMentions(String(content));
+			if (
+				server.agentHandle &&
+				typed.length > 0 &&
+				!typed.some((m) => mentionMatchesHandle(m, server.agentHandle))
+			) {
+				console.info(
+					`[agent] invoking via @mention; typed=${typed.join(",")} stored=${server.agentHandle}`,
+				);
+			}
 			void triggerAgentProcess({
 				req,
+				res,
 				serverId: server.id,
 				memberId: member.id,
 				channelId: channel.id,
@@ -93,6 +108,14 @@ export default async function handler(
 			}).catch((err) => {
 				console.error(err, "[agent] /process failed");
 			});
+		} else if (
+			typeof content === "string" &&
+			content.includes("@") &&
+			!server.agentHandle
+		) {
+			console.warn(
+				`[agent] message has @ but Server.agentHandle is null for ${server.id}`,
+			);
 		}
 
 		return res.status(201).json(message);
