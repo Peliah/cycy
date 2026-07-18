@@ -5,27 +5,79 @@
 <h1 align="center">Cycy</h1>
 
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](https://choosealicense.com/licenses/mit/)
+[![Live Demo](https://img.shields.io/badge/Live_Demo-cy--cy.vercel.app-black?style=for-the-badge&logo=vercel)](https://cy-cy.vercel.app)
 
-  <p align="center">
+**Study like you know what you're bad at.**
 
-  **Cycy | A Full-Featured Real Time (Video , Audio , Chat) Application Powered by Next.js, Socket.io, LiveKit**
-  Real-time communication for learning communities — servers, channels, DMs, and live audio/video.
-    <br />
-    <br />
-  </p>
+AI course agents inside a real-time learning space — study, practice, and review in one continuous loop, with chat, DMs, and live audio/video.
 
-<br>
-<hr>
+<br />
+
+**Live app:** [https://cy-cy.vercel.app](https://cy-cy.vercel.app)
+
+<br />
+<hr />
 
 </div>
 
-<br>
+## Problem Statement
 
-![alt text](mockup-desktop.png)
-![alt text](mockup-mobile.png)
+Students who study alone often can't tell if they actually understand something until it's too late — the exam. Existing tools each solve one slice and leave the rest to the student to stitch together:
 
+| Tool category | Gap |
+|---------------|-----|
+| **Quizlet / flashcard apps** | Drill without diagnosis. Wrong is wrong; no insight into *why*. |
+| **ChatGPT / generic AI tutors** | Answer questions but have no persistent model of what a specific learner does and doesn't understand. |
+| **Duolingo** | Excellent gamification and retention, but content is broad/hobbyist — not mapped to real coursework. |
+| **Study groups / Discord servers** | Social accountability exists, but no structured curriculum or diagnostic layer underneath the chat. |
 
-### Built With
+**Nobody combines** real subject teaching + targeted, diagnostic practice + optional social accountability in a single loop.
+
+## Solution
+
+Cycy turns every course into an **AI agent** living inside its own server. Studying, practicing, and reviewing happen in one guided loop — not across five disconnected apps — and the platform names the specific misconception, not just "wrong."
+
+### How it works
+
+1. **Join a course** — Onboarding lands you in a course server with a dedicated AI agent.
+2. **Learn concept by concept** — The agent runs a focused loop: study → quick check → practice → explain-back → spaced review.
+3. **Get diagnosed, not just graded** — Misses surface typed misconceptions and micro-drills instead of a vague "incorrect."
+4. **Stay in one place** — Mention the agent (`@Agent`) in a DM or channel; the same tutor meets you where you already chat.
+5. **Optional social layer** — Peer DMs, invites, and real-time voice/video when you want accountability without leaving the platform.
+
+### What this gives learners
+
+- **"I know exactly what I'm bad at"** — Misconceptions are typed and diagnosed, not just marked wrong.
+- **"I won't forget it in three weeks"** — Spaced repetition tuned to individual gaps.
+- **"I'm not doing this alone — unless I want to be"** — Solo practice by default; social features optional.
+- **"It's built for my actual course"** — Curriculum-mapped content, not generic trivia.
+
+### Platform capabilities
+
+Built on a full real-time communication stack so learning and community share the same space:
+
+- Servers, text / audio / video channels, and member roles
+- Real-time chat (Socket.io) with edit/delete sync
+- Direct messages and invite links
+- LiveKit audio & video calls
+- File attachments (UploadThing)
+- Auth via Clerk
+
+## Screenshots
+
+<p align="center">
+  <img src="mockup-desktop.png" alt="Cycy desktop mockup" width="100%">
+</p>
+
+<p align="center">
+  <img src="mockup-mobile.png" alt="Cycy mobile mockup" width="60%">
+</p>
+
+## Live Demo
+
+Try Cycy here: **[https://cy-cy.vercel.app](https://cy-cy.vercel.app)**
+
+## Built With
 
 - ![Next JS](https://img.shields.io/badge/Next-black?style=for-the-badge&logo=next.js&logoColor=white)
 - ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)
@@ -43,69 +95,57 @@
 
 ## Features
 
-- 🔒 **Authentication + Google Auth** With **Clerk**
-- 🎉 **Server** **creation** and customization
+- 🔒 **Authentication + Google Auth** with **Clerk**
+- 🧠 **AI course agents** with a concept-by-concept learning loop
+- 🎉 **Server** creation and customization (each course = a server)
 - 📱 **Real-time** messaging using **Socket.io**
-- 📳**Websocket** **fallback**: **Polling** with alerts
-- 🚀 **Create** **Text**, **Audio** and **Video** call **Channels**
-- 📨 **Conversation** between members
-- 🎬 **Video** **Calls** between members
-- 🔊 **Audio** **Calls** between members
----
-- 🎁 **Send** **attachments** as messages using **UploadThing**
-- 🧨 **Delete** & **Edit** messages in **real time** for all users
-- 🔰 **Member management** (**Kick**, Role change **Guest** / **Moderator**)
-- 🔗 **Unique** **invite** **link** **generation** & full working invite system
-- ⛓ **Infinite** **loading** for **messages** in batches of 10 (**@tanstack/query**)
-- 🔍 **Search** **Command Line** Functionality
-- 🎨 **Theme Toggler** (Light /Dark mode)
-- 🚀 **Optimized SEO and Performance**: The project is optimized for SEO and performance using the latest Next.js features and best practices for **meta** tags and **Next/Image** && **site maps**.
-- 🎊 **Responsive Design**
-
-
+- 📳 **Websocket fallback**: polling with alerts
+- 🚀 **Text**, **Audio**, and **Video** channels
+- 📨 **Conversations** between members and with the agent
+- 🎬 **Video** and 🔊 **Audio** calls (LiveKit)
+- 🎁 **Attachments** via **UploadThing**
+- 🧨 **Delete & edit** messages in real time
+- 🔰 **Member management** (kick, Guest / Moderator roles)
+- 🔗 **Invite links** with a full invite flow
+- ⛓ **Infinite loading** for messages (**@tanstack/query**)
+- 🔍 **Search** command palette
+- 🎨 **Light / dark** theme
+- 🎊 **Responsive** design
 
 ## Getting Started
 
-First, run the development server:
-
-1. Clone or Fork the repo
+1. Clone the repo
 
    ```sh
-   git clone <your-repo-url>
-   cd ./cycy
+   git clone https://github.com/Peliah/cycy.git
+   cd cycy
    ```
 
-2. Install Dependencies
+2. Install dependencies
 
    ```sh
    npm install
    ```
 
-3. rename `.env.example` file to `.env`
+3. Copy `.env.example` to `.env` and fill in the required keys
 
-4. Start the server
+4. Start the dev server
 
-    ```sh
-    npm run dev
-    ```
+   ```sh
+   npm run dev
+   ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Open [http://localhost:3000](http://localhost:3000) to view the app locally.
 
 ## Deploy on Vercel
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+The easiest way to deploy is the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme).
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+Production demo: [https://cy-cy.vercel.app](https://cy-cy.vercel.app)
 
-<!-- CONTRIBUTING -->
 ## Contributing
 
-Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
-
-If you have a suggestion that would make this better, please fork the repo and create a pull request. You can also simply open an issue with the tag "enhancement".
-Don't forget to give the project a star! Thanks again!
+Contributions are welcome. Fork the repo, open a feature branch, and submit a pull request. You can also open an issue with the tag `enhancement`.
 
 1. Fork the Project
 2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
@@ -113,7 +153,6 @@ Don't forget to give the project a star! Thanks again!
 4. Push to the Branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-<!-- LICENSE -->
 ## License
 
-Distributed under the MIT License. See `LICENSE.txt` for more information.
+Distributed under the MIT License. See `LICENSE` for more information.
