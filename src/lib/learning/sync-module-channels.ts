@@ -21,7 +21,7 @@ function slugifyChannelName(title: string, order: number): string {
 }
 
 function toModuleStatus(
-	status: CurriculumModule["progressStatus"],
+	status: CurriculumModule["progressStatus"] | string | null | undefined,
 ): ModuleProgressStatus {
 	switch (status) {
 		case "LOCKED":
@@ -63,15 +63,55 @@ async function uniqueChannelName(
 	return candidate;
 }
 
+function normalizeModules(modules: unknown): CurriculumModule[] {
+	if (!Array.isArray(modules)) return [];
+
+	const normalized: CurriculumModule[] = [];
+	for (const raw of modules) {
+		if (!raw || typeof raw !== "object") continue;
+		const record = raw as Record<string, unknown>;
+		const id =
+			typeof record.id === "string"
+				? record.id
+				: typeof record.moduleId === "string"
+					? record.moduleId
+					: null;
+		const title = typeof record.title === "string" ? record.title : null;
+		const order =
+			typeof record.order === "number"
+				? record.order
+				: typeof record.order === "string" && Number.isFinite(Number(record.order))
+					? Number(record.order)
+					: null;
+
+		if (!id || !title || order === null) continue;
+
+		normalized.push({
+			id,
+			title,
+			order,
+			progressStatus:
+				(record.progressStatus as CurriculumModule["progressStatus"]) ?? null,
+		});
+	}
+	return normalized;
+}
+
 /**
  * Idempotent: upsert one TEXT channel per Nest curriculum module.
  * Only touches channels with externalModuleId set.
  */
 export async function syncModuleChannels(
 	serverId: string,
-	modules: CurriculumModule[],
-): Promise<{ upserted: number }> {
-	if (modules.length === 0) return { upserted: 0 };
+	modulesInput: CurriculumModule[] | unknown,
+): Promise<{ upserted: number; skipped: number }> {
+	const modules = normalizeModules(modulesInput);
+	if (modules.length === 0) {
+		return {
+			upserted: 0,
+			skipped: Array.isArray(modulesInput) ? modulesInput.length : 0,
+		};
+	}
 
 	const server = await prisma.server.findUnique({
 		where: { id: serverId },
@@ -83,42 +123,52 @@ export async function syncModuleChannels(
 
 	let upserted = 0;
 
-	await prisma.$transaction(async (tx) => {
-		for (const mod of modules) {
-			const baseName = slugifyChannelName(mod.title, mod.order);
-			const name = await uniqueChannelName(
-				tx,
-				serverId,
-				baseName,
-				mod.id,
-			);
-			const moduleStatus = toModuleStatus(mod.progressStatus);
-
-			await tx.channel.upsert({
-				where: {
-					serverId_externalModuleId: {
-						serverId,
-						externalModuleId: mod.id,
-					},
-				},
-				create: {
-					name,
-					type: ChannelType.TEXT,
+	await prisma.$transaction(
+		async (tx) => {
+			for (const mod of modules) {
+				const baseName = slugifyChannelName(mod.title, mod.order);
+				const name = await uniqueChannelName(
+					tx,
 					serverId,
-					profileId: server.profileId,
-					externalModuleId: mod.id,
-					moduleStatus,
-					moduleOrder: mod.order,
-				},
-				update: {
-					moduleStatus,
-					moduleOrder: mod.order,
-					// Keep existing channel name if user-facing rename ever allowed later.
-				},
-			});
-			upserted += 1;
-		}
-	});
+					baseName,
+					mod.id,
+				);
+				const moduleStatus = toModuleStatus(mod.progressStatus);
 
-	return { upserted };
+				const existing = await tx.channel.findFirst({
+					where: { serverId, externalModuleId: mod.id },
+					select: { id: true },
+				});
+
+				if (existing) {
+					await tx.channel.update({
+						where: { id: existing.id },
+						data: {
+							moduleStatus,
+							moduleOrder: mod.order,
+						},
+					});
+				} else {
+					await tx.channel.create({
+						data: {
+							name,
+							type: ChannelType.TEXT,
+							serverId,
+							profileId: server.profileId,
+							externalModuleId: mod.id,
+							moduleStatus,
+							moduleOrder: mod.order,
+						},
+					});
+				}
+				upserted += 1;
+			}
+		},
+		{
+			maxWait: 10_000,
+			timeout: 30_000,
+		},
+	);
+
+	return { upserted, skipped: 0 };
 }

@@ -1,6 +1,7 @@
 import { ServerSideBar } from "@/components/layout/server-side-bar";
 import { CurriculumStatusBanner } from "@/components/learning/curriculum-status-banner";
 import type { CurriculumLifecycleStatus } from "@/lib/cycy/types";
+import { loadCurriculumContentForServer } from "@/lib/learning/load-curriculum-content";
 import { prisma } from "@/lib/prismadb";
 import { getCurrentProfile, getServer } from "@/lib/query";
 import { auth } from "@clerk/nextjs/server";
@@ -19,12 +20,40 @@ export default async function ServerIdLayout({
 		const { redirectToSignIn } = await auth();
 		return redirectToSignIn();
 	}
-	const server = await getServer(serverId, profile.id);
+	let server = await getServer(serverId, profile.id);
 	if (!server) {
 		return redirect("/");
 	}
 
 	const curriculum = await prisma.curriculum.findUnique({
+		where: { serverId },
+		select: { status: true },
+	});
+
+	// Pull full Nest curriculum content on server entry (409 if not READY yet).
+	// Syncs module channels for the sidebar; Nest errors never break the layout.
+	if (curriculum?.status !== "FAILED") {
+		const contentResult = await loadCurriculumContentForServer(serverId);
+		if (contentResult.loaded) {
+			// Bypass getServer() React cache so sidebar sees newly upserted channels.
+			const refreshed = await prisma.server.findUnique({
+				where: {
+					id: serverId,
+					members: { some: { profileId: profile.id } },
+				},
+				include: {
+					channels: { orderBy: { createdAt: "asc" } },
+					members: {
+						include: { profile: true },
+						orderBy: { role: "asc" },
+					},
+				},
+			});
+			if (refreshed) server = refreshed;
+		}
+	}
+
+	const latestCurriculum = await prisma.curriculum.findUnique({
 		where: { serverId },
 		select: { status: true },
 	});
@@ -42,6 +71,7 @@ export default async function ServerIdLayout({
 				<CurriculumStatusBanner
 					serverId={serverId}
 					initialStatus={
+						(latestCurriculum?.status as CurriculumLifecycleStatus | undefined) ??
 						(curriculum?.status as CurriculumLifecycleStatus | undefined) ??
 						"PENDING"
 					}

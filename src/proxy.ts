@@ -4,21 +4,21 @@ const isPublicRoute = createRouteMatcher([
 	"/",
 	"/sign-in(.*)",
 	"/sign-up(.*)",
-	"/api/uploadthing",
+	"/api/uploadthing(.*)",
+	// Socket.IO handshake + polling — auth is enforced inside message handlers
+	"/api/socket(.*)",
 ]);
 
-// protect all routes except the public one
 export default clerkMiddleware(async (auth, request) => {
 	if (!isPublicRoute(request)) {
 		await auth.protect();
 	}
 });
 
-// export const config = {
-// 	// The following matcher runs middleware on all routes
-// 	// except static assets. + websocket routes
-// 	matcher: ["/((?!.*\\..*|_next).*)", "/", "/(api|trpc)(.*)"],
-// };
 export const config = {
-	matcher: ["/((?!.*\\..*|_next|ws).*)", "/", "/(api|trpc)(.*)", "/__clerk/:path*"],
+	matcher: [
+		// Skip Next internals and static files (unless in search params)
+		"/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
+		"/(api|trpc)(.*)",
+	],
 };

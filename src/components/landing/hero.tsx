@@ -14,7 +14,7 @@ export function LandingHero() {
 		<section className="relative isolate overflow-hidden pb-8 pt-6 sm:pb-12 sm:pt-10">
 			{/* Full-bleed atmosphere — keep cubes visible */}
 			<div className="absolute inset-0 -z-10">
-				<picture>
+				<picture className="absolute inset-0 block">
 					<source srcSet="/landing-page-bg.avif" type="image/avif" />
 					<Image
 						src="/landing-page-bg.png"

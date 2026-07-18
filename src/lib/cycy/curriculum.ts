@@ -2,6 +2,7 @@ import { cycyApi } from "@/lib/cycy/browser";
 import type {
 	BootstrapResponse,
 	BootstrapResult,
+	CurriculumContentResponse,
 	CurriculumLifecycleStatus,
 	CurriculumStatusResponse,
 } from "@/lib/cycy/types";
@@ -10,6 +11,18 @@ export function isTerminalCurriculumStatus(
 	status: CurriculumLifecycleStatus,
 ): boolean {
 	return status === "READY" || status === "FAILED";
+}
+
+function errorMessageFromBody(body: unknown, fallback: string): string {
+	if (
+		body &&
+		typeof body === "object" &&
+		"message" in body &&
+		typeof (body as { message: unknown }).message === "string"
+	) {
+		return (body as { message: string }).message;
+	}
+	return fallback;
 }
 
 export async function fetchCurriculum(
@@ -21,16 +34,38 @@ export async function fetchCurriculum(
 	});
 	const body: unknown = await response.json().catch(() => null);
 	if (!response.ok) {
-		const message =
-			body &&
-			typeof body === "object" &&
-			"message" in body &&
-			typeof (body as { message: unknown }).message === "string"
-				? (body as { message: string }).message
-				: `Curriculum request failed (${response.status})`;
-		throw new Error(message);
+		throw new Error(
+			errorMessageFromBody(
+				body,
+				`Curriculum request failed (${response.status})`,
+			),
+		);
 	}
 	return body as CurriculumStatusResponse;
+}
+
+/** Full Nest curriculum content (modules/concepts). Visible in browser Network as /curriculum/content */
+export async function fetchCurriculumContent(
+	serverId: string,
+): Promise<CurriculumContentResponse | null> {
+	const response = await fetch(cycyApi.curriculumContent(serverId), {
+		method: "GET",
+		credentials: "include",
+	});
+	const body: unknown = await response.json().catch(() => null);
+
+	// Not ready yet — caller can keep polling status.
+	if (response.status === 409) return null;
+
+	if (!response.ok) {
+		throw new Error(
+			errorMessageFromBody(
+				body,
+				`Curriculum content request failed (${response.status})`,
+			),
+		);
+	}
+	return body as CurriculumContentResponse;
 }
 
 export async function bootstrapCurriculumRequest(

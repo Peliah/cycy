@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { CycyApiError } from "@/lib/cycy/client";
 import { cycyErrorResponse, getCycyClient } from "@/lib/cycy/server";
 import { syncModuleChannels } from "@/lib/learning/sync-module-channels";
 import { prisma } from "@/lib/prismadb";
@@ -30,17 +31,13 @@ export async function POST(
 		}
 
 		const client = await getCycyClient();
-		const curriculum = await client.getCurriculum(serverId);
+		// Prefer full /curriculum/content so Nest content endpoint is always used.
+		const curriculum = await client.getCurriculumContent(serverId);
 
-		if (curriculum.status !== "READY") {
-			return NextResponse.json({
-				synced: false,
-				status: curriculum.status,
-				upserted: 0,
-			});
-		}
-
-		const { upserted } = await syncModuleChannels(serverId, curriculum.modules);
+		const { upserted, skipped } = await syncModuleChannels(
+			serverId,
+			curriculum.modules,
+		);
 
 		await prisma.curriculum.updateMany({
 			where: { serverId },
@@ -54,8 +51,31 @@ export async function POST(
 			synced: true,
 			status: curriculum.status,
 			upserted,
+			skipped,
+			moduleCount: Array.isArray(curriculum.modules)
+				? curriculum.modules.length
+				: 0,
+			source: "curriculum/content",
 		});
 	} catch (error) {
-		return cycyErrorResponse(error);
+		if (error instanceof CycyApiError) {
+			if (error.status === 409) {
+				return NextResponse.json(
+					{
+						synced: false,
+						...(typeof error.body === "object" && error.body !== null
+							? error.body
+							: { message: error.message }),
+					},
+					{ status: 409 },
+				);
+			}
+			return cycyErrorResponse(error);
+		}
+
+		console.error(error, "SYNC MODULES ERROR");
+		const message =
+			error instanceof Error ? error.message : "Failed to sync module channels";
+		return NextResponse.json({ message }, { status: 500 });
 	}
 }

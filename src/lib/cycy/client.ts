@@ -3,6 +3,7 @@ import type {
 	BootstrapResult,
 	ConversationSessionResponse,
 	CourseConceptsResponse,
+	CurriculumContentResponse,
 	CurriculumStatusResponse,
 	ExplainBackBody,
 	ExplainBackResponse,
@@ -131,6 +132,13 @@ export function createCycyClient(options: CycyClientOptions = {}) {
 		getCurriculum: (serverId: string) =>
 			request<CurriculumStatusResponse>(
 				`/api/v1/servers/${serverId}/curriculum`,
+				{ method: "GET" },
+			),
+
+		/** GET /api/v1/servers/:serverId/curriculum/content — full modules/concepts when READY */
+		getCurriculumContent: (serverId: string) =>
+			request<CurriculumContentResponse>(
+				`/api/v1/servers/${serverId}/curriculum/content`,
 				{ method: "GET" },
 			),
 

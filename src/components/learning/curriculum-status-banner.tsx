@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import {
 	bootstrapCurriculumRequest,
 	fetchCurriculum,
+	fetchCurriculumContent,
 	isTerminalCurriculumStatus,
 } from "@/lib/cycy/curriculum";
 import type { CurriculumLifecycleStatus } from "@/lib/cycy/types";
@@ -15,11 +16,18 @@ import { cn } from "@/lib/utils";
 
 const POLL_MS = 10_000;
 
-async function syncModuleChannels(serverId: string) {
+/** Loads Nest /curriculum/content via BFF and syncs module channels. */
+async function loadReadyCurriculumContent(serverId: string) {
 	try {
-		await fetch(`/api/servers/${serverId}/sync-modules`, { method: "POST" });
+		const content = await fetchCurriculumContent(serverId);
+		if (!content) {
+			console.warn(
+				"Curriculum content not ready (409)",
+				"CURRICULUM CONTENT CLIENT",
+			);
+		}
 	} catch (error) {
-		console.error(error, "SYNC MODULE CHANNELS CLIENT ERROR");
+		console.error(error, "CURRICULUM CONTENT CLIENT ERROR");
 	}
 }
 
@@ -46,7 +54,7 @@ export function CurriculumStatusBanner({
 		let cancelled = false;
 
 		const markReady = async () => {
-			await syncModuleChannels(serverId);
+			await loadReadyCurriculumContent(serverId);
 			if (cancelled) return;
 			setDismissed(true);
 			router.refresh();
@@ -134,13 +142,13 @@ export function CurriculumStatusBanner({
 
 	const syncedReadyServer = useRef<string | null>(null);
 
-	// Already READY (e.g. returning user) — ensure module channels exist once per server.
+	// Already READY (e.g. returning user) — pull /content once per server for channels.
 	useEffect(() => {
 		if (initialStatus !== "READY") return;
 		if (syncedReadyServer.current === serverId) return;
 		syncedReadyServer.current = serverId;
 		void (async () => {
-			await syncModuleChannels(serverId);
+			await loadReadyCurriculumContent(serverId);
 			router.refresh();
 		})();
 	}, [initialStatus, serverId, router]);

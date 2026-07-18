@@ -215,3 +215,101 @@ export interface CourseConceptsResponse {
 	agentHandle: string;
 	concepts: ConceptSummary[];
 }
+
+/** Full curriculum content — GET /servers/:serverId/curriculum/content */
+
+export interface McqChoice {
+	id: string;
+	text: string;
+	/** Present for server admins only */
+	correct?: boolean;
+}
+
+export interface StudyUnitContent {
+	explanation: string;
+	workedExample: string;
+}
+
+export interface ComprehensionQuestionContent {
+	prompt: string;
+	choices: McqChoice[];
+}
+
+export interface PracticeProblemContent {
+	prompt: string;
+	/** Admins only */
+	solution?: string;
+	/** Admins only */
+	rubric?: string;
+}
+
+export interface MisconceptionContent {
+	code: string;
+	label: string;
+	description: string;
+	drillPrompt?: string;
+}
+
+export interface QuizQuestionContent {
+	id: string;
+	order: number;
+	type: "MCQ" | "STRUCTURAL";
+	prompt: string;
+	choices?: McqChoice[];
+	/** Admins only (STRUCTURAL) */
+	correctAnswer?: string;
+	/** Admins only */
+	rubric?: string;
+}
+
+export interface GateQuizContent {
+	id: string;
+	title: string;
+	passScore: number;
+	questions: QuizQuestionContent[];
+}
+
+export interface FinalExamContent {
+	id: string;
+	passScore: number;
+	questions: QuizQuestionContent[];
+}
+
+export interface ConceptContent {
+	id: string;
+	slug: string;
+	title: string;
+	description?: string | null;
+	order: number;
+	studyUnit: StudyUnitContent;
+	comprehensionQuestion: ComprehensionQuestionContent;
+	practiceProblem: PracticeProblemContent;
+	misconceptions: MisconceptionContent[];
+}
+
+export interface ModuleContent {
+	id: string;
+	order: number;
+	title: string;
+	content: string;
+	progressStatus?: ModuleProgressStatus | null;
+	gateQuiz?: GateQuizContent | null;
+	concepts: ConceptContent[];
+}
+
+export interface CurriculumContentResponse {
+	serverId: string;
+	curriculumId: string;
+	status: "READY";
+	summary: string;
+	learningGoal: string;
+	learningReason?: string | null;
+	goalCriteria: string[];
+	modules: ModuleContent[];
+	finalExam?: FinalExamContent | null;
+}
+
+export interface CurriculumContentConflict {
+	status: "PENDING" | "GENERATING" | "FAILED";
+	message: string;
+}
