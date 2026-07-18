@@ -28,6 +28,43 @@ function mapAuthorType(raw: string | undefined): MessageAuthorType {
 	return MessageAuthorType.AI_AGENT;
 }
 
+/** Accept the documented shape plus common Nest/axios variants. */
+function normalizeBody(raw: unknown): IncomingBody {
+	let value: unknown = raw;
+
+	if (typeof value === "string") {
+		try {
+			value = JSON.parse(value) as unknown;
+		} catch {
+			return {};
+		}
+	}
+
+	if (!value || typeof value !== "object") return {};
+
+	const obj = value as Record<string, unknown>;
+	const nested =
+		obj.data && typeof obj.data === "object"
+			? (obj.data as Record<string, unknown>)
+			: obj;
+
+	const conversationId =
+		(typeof nested.conversationId === "string" && nested.conversationId) ||
+		(typeof nested.conversation_id === "string" && nested.conversation_id) ||
+		undefined;
+
+	let messages: IncomingMessage[] | undefined;
+	if (Array.isArray(nested.messages)) {
+		messages = nested.messages as IncomingMessage[];
+	} else if (nested.message && typeof nested.message === "object") {
+		messages = [nested.message as IncomingMessage];
+	} else if (Array.isArray(nested.message)) {
+		messages = nested.message as IncomingMessage[];
+	}
+
+	return { conversationId, messages };
+}
+
 /**
  * Nest → frontend webhook. conversationId is LearningSession.id;
  * messages land in lastChannelId and emit on chat:{channelId}:messages.
@@ -50,11 +87,23 @@ export default async function handler(
 	}
 
 	try {
-		const body = req.body as IncomingBody;
+		const body = normalizeBody(req.body);
 		const conversationId = body.conversationId;
 		const messages = body.messages;
 
 		if (!conversationId || !Array.isArray(messages) || messages.length === 0) {
+			console.warn("[agent-response] bad payload", {
+				contentType: req.headers["content-type"],
+				bodyType: typeof req.body,
+				keys:
+					req.body && typeof req.body === "object"
+						? Object.keys(req.body as object)
+						: [],
+				normalized: {
+					hasConversationId: Boolean(conversationId),
+					messageCount: Array.isArray(messages) ? messages.length : null,
+				},
+			});
 			return res.status(400).json({
 				message: "conversationId and messages are required",
 			});

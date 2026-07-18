@@ -20,8 +20,9 @@ export default clerkMiddleware(async (auth, request) => {
 
 export const config = {
 	matcher: [
-		// Skip Next internals and static files (unless in search params)
-		"/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
-		"/(api|trpc)(.*)",
+		// Skip Next internals, static files, and Nest→frontend webhooks (body must stay intact)
+		"/((?!_next|api/internal|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
+		"/api/((?!internal).*)",
+		"/(trpc)(.*)",
 	],
 };
