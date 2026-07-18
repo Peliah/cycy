@@ -4,6 +4,7 @@ const isPublicRoute = createRouteMatcher([
 	"/",
 	"/sign-in(.*)",
 	"/sign-up(.*)",
+	"/certificates(.*)",
 	"/api/uploadthing(.*)",
 	// Socket.IO handshake + polling — auth is enforced inside message handlers
 	"/api/socket(.*)",

@@ -121,3 +121,81 @@ export type GateQuizDialogProps = {
 	moduleId: string;
 	agentHandle: string | null;
 };
+
+export type FinalExamStatus =
+	| "LOCKED"
+	| "UNAVAILABLE"
+	| "AVAILABLE"
+	| "PASSED";
+
+export type FinalExamCertificate = {
+	id: string;
+	verificationCode: string;
+	issuedAt: string;
+};
+
+export type FinalExamQuizPayload = GateQuizPayload;
+
+export type FinalExamGetResponse = {
+	status: FinalExamStatus;
+	message: string | null;
+	hasExam: boolean;
+	certificate: FinalExamCertificate | null;
+	lastAttempt: {
+		score: number;
+		passed: boolean;
+		createdAt: string;
+	} | null;
+	quiz: FinalExamQuizPayload | null;
+};
+
+export type FinalExamSubmitResult = {
+	passed: boolean;
+	score: number;
+	passScore: number;
+	certificate: FinalExamCertificate | null;
+	message?: string;
+};
+
+export type CapstoneNestSnapshot = {
+	certificateStage: string | null;
+	interviewStatus: string;
+	goalMet: boolean | null;
+	rank: string;
+	courseScore: number;
+};
+
+export type CapstoneSnapshot = {
+	serverId: string;
+	serverName: string | null;
+	agentHandle: string | null;
+	modulesComplete: boolean;
+	hasFinalExam: boolean;
+	certificate: FinalExamCertificate | null;
+	nest: CapstoneNestSnapshot | null;
+};
+
+export type CapstonePanelProps = {
+	serverId: string;
+};
+
+export type FinalExamDialogProps = {
+	open: boolean;
+	onOpenChange: (open: boolean) => void;
+	serverId: string;
+	onPassed?: () => void;
+};
+
+export type CertificateCardProps = {
+	serverName: string | null;
+	certificate: FinalExamCertificate;
+};
+
+export type MockInterviewCardProps = {
+	serverId: string;
+	agentHandle: string | null;
+	interviewStatus: string | null;
+	certificateStage: string | null;
+	modulesComplete: boolean;
+	hasLocalCertificate: boolean;
+};

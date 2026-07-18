@@ -1,6 +1,7 @@
 import { ChatHeader } from "@/components/chat/chat-header";
 import { ChatInput } from "@/components/chat/chat-input";
 import { ChatMessages } from "@/components/chat/chat-messages";
+import { CapstonePanel } from "@/components/learning/capstone-panel";
 import { LearningRoadmapPanel } from "@/components/learning/learning-roadmap";
 import { ModuleLockedNotice } from "@/components/learning/module-locked-notice";
 import { ModuleStudyPanel } from "@/components/learning/module-study-panel";
@@ -182,6 +183,7 @@ export default async function ChannelIdPage({ params }: ChannelIdPageProps) {
 					<div className="border-b border-shell-border px-4">
 						<TabsList className="h-10 bg-transparent">
 							<TabsTrigger value="roadmap">Roadmap</TabsTrigger>
+							<TabsTrigger value="capstone">Capstone</TabsTrigger>
 							<TabsTrigger value="chat">Chat</TabsTrigger>
 						</TabsList>
 					</div>
@@ -190,6 +192,12 @@ export default async function ChannelIdPage({ params }: ChannelIdPageProps) {
 						className="mt-0 flex min-h-0 flex-1 flex-col data-[state=inactive]:hidden"
 					>
 						<LearningRoadmapPanel serverId={serverId} />
+					</TabsContent>
+					<TabsContent
+						value="capstone"
+						className="mt-0 flex min-h-0 flex-1 flex-col data-[state=inactive]:hidden"
+					>
+						<CapstonePanel serverId={serverId} />
 					</TabsContent>
 					<TabsContent
 						value="chat"
