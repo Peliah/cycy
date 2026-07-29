@@ -10,24 +10,48 @@ import { prisma } from "@/lib/prismadb";
 export type LoadCurriculumContentResult =
 	| {
 			loaded: true;
-			content: CurriculumContentResponse;
+			skipped?: boolean;
+			content?: CurriculumContentResponse;
 			upserted: number;
 			modulesUpserted: number;
 	  }
 	| {
 			loaded: false;
-			reason: "not_ready" | "error";
+			reason: "not_ready" | "error" | "already_synced";
 			status?: string;
 			message?: string;
 	  };
 
+async function isCurriculumAlreadySynced(serverId: string): Promise<boolean> {
+	const curriculum = await prisma.curriculum.findUnique({
+		where: { serverId },
+		select: {
+			status: true,
+			modules: { select: { externalId: true } },
+		},
+	});
+	if (curriculum?.status !== "READY" || curriculum.modules.length === 0) {
+		return false;
+	}
+	return curriculum.modules.every((module) => Boolean(module.externalId));
+}
+
 /**
  * Fetch Nest curriculum content, persist modules/quizzes, sync module channels.
- * Safe to call on every server layout load — 409/not-ready is not an error.
+ * Skips the Nest round-trip when local modules are already synced (faster roadmap loads).
  */
 export async function loadCurriculumContentForServer(
 	serverId: string,
 ): Promise<LoadCurriculumContentResult> {
+	if (await isCurriculumAlreadySynced(serverId)) {
+		return {
+			loaded: true,
+			skipped: true,
+			upserted: 0,
+			modulesUpserted: 0,
+		};
+	}
+
 	try {
 		console.info(
 			`[curriculum/content] fetching Nest content for server ${serverId}`,
@@ -53,7 +77,7 @@ export async function loadCurriculumContentForServer(
 			`[curriculum/content] modules=${modulesUpserted} channels=${upserted}`,
 		);
 
-		return { loaded: true, content, upserted, modulesUpserted };
+		return { loaded: true, content, upserted, modulesUpserted, skipped: false };
 	} catch (error) {
 		if (error instanceof CycyApiError && error.status === 409) {
 			const body = error.body;

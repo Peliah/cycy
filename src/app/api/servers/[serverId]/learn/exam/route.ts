@@ -11,6 +11,22 @@ import { getCurrentProfile } from "@/lib/query";
 
 type Choice = { id: string; text: string; correct?: boolean };
 
+const MIN_MCQ_CHOICES = 2;
+
+function toLearnerChoices(raw: unknown): Array<{ id: string; text: string }> {
+	if (!Array.isArray(raw)) return [];
+	const choices = raw
+		.filter(
+			(item): item is Choice =>
+				!!item &&
+				typeof item === "object" &&
+				typeof (item as Choice).id === "string" &&
+				typeof (item as Choice).text === "string",
+		)
+		.map(({ id, text }) => ({ id, text }));
+	return choices.length >= MIN_MCQ_CHOICES ? choices : [];
+}
+
 type SubmitBody = {
 	answers: Record<string, string>;
 };
@@ -130,12 +146,10 @@ export async function GET(
 					order: q.order,
 					type: q.type,
 					prompt: q.prompt,
-					choices: Array.isArray(q.choices)
-						? (q.choices as Choice[]).map((c) => ({
-								id: c.id,
-								text: c.text,
-							}))
-						: null,
+					choices:
+						q.type === QuizQuestionType.MCQ
+							? toLearnerChoices(q.choices)
+							: null,
 				})),
 			},
 		});

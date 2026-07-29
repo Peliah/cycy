@@ -8,26 +8,29 @@ import { Button } from "@/components/ui/button";
 import {
 	bootstrapCurriculumRequest,
 	fetchCurriculum,
-	fetchCurriculumContent,
 	isTerminalCurriculumStatus,
 } from "@/lib/cycy/curriculum";
 import type { CurriculumLifecycleStatus } from "@/lib/cycy/types";
 import { cn } from "@/lib/utils";
 
-const POLL_MS = 10_000;
+const POLL_MS = 3_000;
 
-/** Loads Nest /curriculum/content via BFF and syncs module channels. */
-async function loadReadyCurriculumContent(serverId: string) {
+async function loadReadyCurriculumContent(serverId: string): Promise<boolean> {
 	try {
-		const content = await fetchCurriculumContent(serverId);
-		if (!content) {
-			console.warn(
-				"Curriculum content not ready (409)",
-				"CURRICULUM CONTENT CLIENT",
-			);
+		const res = await fetch(`/api/cycy/servers/${serverId}/curriculum/content`, {
+			method: "GET",
+		});
+		if (res.status === 409) {
+			console.warn("Curriculum content not ready (409)", "CURRICULUM CONTENT CLIENT");
+			return false;
 		}
+		if (!res.ok) {
+			throw new Error(`Curriculum content sync failed (${res.status})`);
+		}
+		return true;
 	} catch (error) {
 		console.error(error, "CURRICULUM CONTENT CLIENT ERROR");
+		return false;
 	}
 }
 
@@ -54,10 +57,10 @@ export function CurriculumStatusBanner({
 		let cancelled = false;
 
 		const markReady = async () => {
-			await loadReadyCurriculumContent(serverId);
+			const synced = await loadReadyCurriculumContent(serverId);
 			if (cancelled) return;
 			setDismissed(true);
-			router.refresh();
+			if (synced) router.refresh();
 		};
 
 		const run = async () => {
@@ -148,8 +151,8 @@ export function CurriculumStatusBanner({
 		if (syncedReadyServer.current === serverId) return;
 		syncedReadyServer.current = serverId;
 		void (async () => {
-			await loadReadyCurriculumContent(serverId);
-			router.refresh();
+			const synced = await loadReadyCurriculumContent(serverId);
+			if (synced) router.refresh();
 		})();
 	}, [initialStatus, serverId, router]);
 
@@ -194,7 +197,7 @@ export function CurriculumStatusBanner({
 						summary ??
 						(isFailed
 							? "You can retry, or keep chatting while we sort this out."
-							: "This usually takes a minute. You can keep using the group.")}
+							: "This usually takes 30–60 seconds. You can keep using the group.")}
 				</p>
 			</div>
 			<div className="flex shrink-0 items-center gap-1">
