@@ -104,6 +104,8 @@ model Message {
   fileUrl    String?           @db.Text
   deleted    Boolean           @default(false)
   authorType MessageAuthorType @default(USER)
+  /// Nest webhook payload (MCQ, STEP_CHIP, etc.) — see FRONTEND_INTEGRATION §14
+  metadata   Json?
   /// Null when authorType is AI_AGENT or SYSTEM
   memberId   String?
   member     Member?           @relation(fields: [memberId], references: [id], onDelete: Cascade)
