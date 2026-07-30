@@ -9,12 +9,47 @@ import {
 	toMaterialItems,
 } from "@/lib/onboarding/materials";
 import type { MaterialItem } from "@/lib/onboarding/schema";
+import { shouldPreExtractOnUpload } from "@/lib/learning/material-preextract";
 
 type UseLearningMaterialUploadArgs = {
 	disabled?: boolean;
 	onAddMaterials: (items: MaterialItem[]) => void;
 	onUploadError: (message: string | null) => void;
 };
+
+const EXTRACT_TIMEOUT_MS = 8_000;
+
+async function extractMaterialTextWithTimeout(
+	item: MaterialItem,
+): Promise<MaterialItem> {
+	if (!shouldPreExtractOnUpload(item.fileName, item.mimeType)) {
+		return item;
+	}
+
+	const controller = new AbortController();
+	const timer = window.setTimeout(() => controller.abort(), EXTRACT_TIMEOUT_MS);
+
+	try {
+		const res = await fetch("/api/onboarding/extract-material", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({
+				fileName: item.fileName,
+				fileUrl: item.fileUrl,
+				mimeType: item.mimeType,
+			}),
+			signal: controller.signal,
+		});
+		if (!res.ok) return item;
+		const body = (await res.json()) as { extractedText?: string };
+		if (!body.extractedText?.trim()) return item;
+		return { ...item, extractedText: body.extractedText };
+	} catch {
+		return item;
+	} finally {
+		window.clearTimeout(timer);
+	}
+}
 
 export function useLearningMaterialUpload({
 	disabled,
@@ -41,6 +76,18 @@ export function useLearningMaterialUpload({
 		setUploadProgress(0);
 	};
 
+	const finishUpload = (items: MaterialItem[]) => {
+		onAddMaterials(items);
+		void Promise.all(items.map(extractMaterialTextWithTimeout)).then(
+			(withText) => {
+				const changed = withText.some(
+					(item, index) => item.extractedText !== items[index]?.extractedText,
+				);
+				if (changed) onAddMaterials(withText);
+			},
+		);
+	};
+
 	const uploadFiles = async (files: File[]) => {
 		if (!files.length || busy) return;
 
@@ -65,7 +112,7 @@ export function useLearningMaterialUpload({
 		try {
 			const result = await startUpload(valid);
 			if (!result?.length) return;
-			onAddMaterials(toMaterialItems(result));
+			finishUpload(toMaterialItems(result));
 		} catch (err) {
 			onUploadError(
 				err instanceof Error ? err.message : "Upload failed. Try again.",
@@ -93,7 +140,7 @@ export function useLearningMaterialUpload({
 				onUploadError("Could not save your notes. Try again.");
 				return false;
 			}
-			onAddMaterials(toMaterialItems(result));
+			finishUpload(toMaterialItems(result));
 			return true;
 		} catch (err) {
 			onUploadError(

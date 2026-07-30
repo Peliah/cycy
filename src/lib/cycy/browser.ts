@@ -6,6 +6,8 @@ export const cycyApi = {
 	health: () => "/api/cycy/health",
 	bootstrap: (serverId: string) => `/api/cycy/servers/${serverId}/bootstrap`,
 	curriculum: (serverId: string) => `/api/cycy/servers/${serverId}/curriculum`,
+	curriculumStatusLocal: (serverId: string) =>
+		`/api/servers/${serverId}/curriculum/status`,
 	curriculumContent: (serverId: string) =>
 		`/api/cycy/servers/${serverId}/curriculum/content`,
 	processMessage: (conversationId: string) =>

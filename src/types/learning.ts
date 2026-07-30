@@ -29,6 +29,7 @@ export type RoadmapData = {
 	memberXp: number;
 	modulesCompleted: number;
 	modulesTotal: number;
+	contentVersion: number;
 	modules: RoadmapModule[];
 	nestProgress: RoadmapNestProgress | null;
 };

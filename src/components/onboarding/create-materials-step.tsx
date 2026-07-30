@@ -52,7 +52,7 @@ export function CreateMaterialsStep({
 		<section className="animate-in fade-in slide-in-from-bottom-2 duration-500">
 			<StepHeading
 				title="Share your materials"
-				description="Upload a PDF or Word doc, or paste notes. We'll turn them into your learning roadmap."
+				description="Optional — add files or notes to personalize your path. You can also continue with just your goal."
 			/>
 
 			<Form {...form}>

@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
 
 import { CycyApiError } from "@/lib/cycy/client";
-import { cycyErrorResponse, getCycyClient } from "@/lib/cycy/server";
-import { syncModuleChannels } from "@/lib/learning/sync-module-channels";
-import { prisma } from "@/lib/prismadb";
+import { cycyErrorResponse } from "@/lib/cycy/server";
+import { syncCurriculumContentOnce } from "@/lib/learning/sync-curriculum-content-once";
 
 /** GET /api/cycy/servers/:serverId/curriculum/content → Nest full curriculum + channel sync */
 export async function GET(
@@ -16,25 +15,28 @@ export async function GET(
 			return NextResponse.json({ message: "serverId is required" }, { status: 400 });
 		}
 
-		const client = await getCycyClient();
-		const data = await client.getCurriculumContent(serverId);
+		const result = await syncCurriculumContentOnce(serverId);
 
-		await prisma.curriculum.updateMany({
-			where: { serverId },
-			data: {
-				status: "READY",
-				...(data.summary ? { summary: data.summary } : {}),
-			},
-		});
-
-		const { upserted, skipped } = await syncModuleChannels(
-			serverId,
-			data.modules,
-		);
+		if (!result.synced) {
+			if (result.reason === "not_ready") {
+				return NextResponse.json(
+					{ status: result.status, message: result.message },
+					{ status: 409 },
+				);
+			}
+			if (result.reason === "error") {
+				return NextResponse.json(
+					{ message: result.message ?? "Content sync failed" },
+					{ status: 500 },
+				);
+			}
+			return NextResponse.json({ skipped: true, _sync: { upserted: 0, skipped: 0 } });
+		}
 
 		return NextResponse.json({
-			...data,
-			_sync: { upserted, skipped },
+			...(result.content ?? {}),
+			skipped: result.skipped ?? false,
+			_sync: { upserted: result.upserted, skipped: 0 },
 		});
 	} catch (error) {
 		if (error instanceof CycyApiError && error.status === 409) {

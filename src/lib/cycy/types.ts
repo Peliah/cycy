@@ -10,6 +10,12 @@ export type CurriculumLifecycleStatus =
 	| "READY"
 	| "FAILED";
 
+export type BootstrapPhase =
+	| "INGESTING"
+	| "PLANNING"
+	| "PERSISTING"
+	| "ENRICHING";
+
 export type ModuleProgressStatus =
 	| "LOCKED"
 	| "AVAILABLE"

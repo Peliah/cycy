@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 
+import { getApiProfile } from "@/lib/api-auth";
 import { createCycyClient } from "@/lib/cycy";
 import {
 	ensureMemberModuleProgress,
 	syncChannelsForMember,
 } from "@/lib/learning/module-progress";
 import { prisma } from "@/lib/prismadb";
-import { getCurrentProfile } from "@/lib/query";
 import { auth } from "@clerk/nextjs/server";
 
 /** GET /api/servers/:serverId/learn/roadmap */
@@ -15,8 +15,8 @@ export async function GET(
 	{ params }: { params: Promise<{ serverId: string }> },
 ) {
 	try {
-		const profile = await getCurrentProfile();
-		if (!profile || !("id" in profile)) {
+		const profile = await getApiProfile();
+		if (!profile) {
 			return new NextResponse("Unauthorized", { status: 401 });
 		}
 
@@ -38,6 +38,7 @@ export async function GET(
 				id: true,
 				status: true,
 				summary: true,
+				contentVersion: true,
 				modules: {
 					orderBy: { order: "asc" },
 					select: {
@@ -103,22 +104,27 @@ export async function GET(
 			conceptsTotal: number;
 		} | null = null;
 
-		try {
-			const { getToken } = await auth();
-			const token = await getToken();
-			if (token) {
-				const client = createCycyClient({ token });
-				const p = await client.getProgress(serverId);
-				const completed = p.concepts.filter((c) => c.status === "COMPLETED").length;
-				nestProgress = {
-					courseScore: p.courseScore,
-					rank: p.rank,
-					conceptsCompleted: completed,
-					conceptsTotal: p.concepts.length,
-				};
+		const includeNest = _req.url.includes("nest=1");
+		if (includeNest) {
+			try {
+				const { getToken } = await auth();
+				const token = await getToken();
+				if (token) {
+					const client = createCycyClient({ token });
+					const p = await client.getProgress(serverId);
+					const completed = p.concepts.filter(
+						(c) => c.status === "COMPLETED",
+					).length;
+					nestProgress = {
+						courseScore: p.courseScore,
+						rank: p.rank,
+						conceptsCompleted: completed,
+						conceptsTotal: p.concepts.length,
+					};
+				}
+			} catch {
+				// Nest progress optional
 			}
-		} catch {
-			// Nest progress optional
 		}
 
 		const completedCount = modules.filter((m) => m.status === "COMPLETED").length;
@@ -127,6 +133,7 @@ export async function GET(
 			serverId,
 			summary: curriculum.summary,
 			status: curriculum.status,
+			contentVersion: curriculum.contentVersion,
 			memberXp: member.xp,
 			modulesCompleted: completedCount,
 			modulesTotal: modules.length,

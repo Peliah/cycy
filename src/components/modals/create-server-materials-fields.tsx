@@ -41,7 +41,9 @@ export function CreateServerMaterialsFields({
 	return (
 		<div className="space-y-4 px-6">
 			<p className="text-sm text-shell-muted">
-				Upload a PDF or Word doc, or paste notes. These shape your AI roadmap.
+				Optional: upload a PDF or Word doc, or paste notes to personalize your
+				starter path. Word docs and pasted notes are read immediately; PDFs stay
+				as references you can open while studying.
 			</p>
 
 			<Tabs defaultValue="upload" className="w-full">

@@ -17,6 +17,7 @@ export const learningMaterialSchema = z.object({
 	fileName: z.string().min(1),
 	fileUrl: z.string().url(),
 	mimeType: z.string().min(1),
+	extractedText: z.string().optional(),
 });
 
 export const createGroupSchema = z.object({
@@ -24,9 +25,7 @@ export const createGroupSchema = z.object({
 	imageUrl: z.string().url().optional().or(z.literal("")),
 	learningGoal: z.string().min(1, "Describe what you want to learn"),
 	learningReason: learningReasonSchema,
-	materials: z
-		.array(learningMaterialSchema)
-		.min(1, "Add a PDF, Word doc, or some notes to continue"),
+	materials: z.array(learningMaterialSchema).default([]),
 });
 
 export const joinGroupSchema = z.object({

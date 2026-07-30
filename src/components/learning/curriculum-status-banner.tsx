@@ -1,219 +1,197 @@
 "use client";
 
-import { Loader2, RefreshCw, X } from "lucide-react";
+import { Loader2, RefreshCw, Sparkles, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
-	bootstrapCurriculumRequest,
-	fetchCurriculum,
-	isTerminalCurriculumStatus,
+	fetchLocalCurriculumStatus,
+	type LocalCurriculumStatus,
 } from "@/lib/cycy/curriculum";
+import { invalidateRoadmapCache } from "@/lib/learning/roadmap-client";
 import type { CurriculumLifecycleStatus } from "@/lib/cycy/types";
-import { cn } from "@/lib/utils";
 
-const POLL_MS = 3_000;
+const ENRICH_POLL_MS = 12_000;
 
-async function loadReadyCurriculumContent(serverId: string): Promise<boolean> {
-	try {
-		const res = await fetch(`/api/cycy/servers/${serverId}/curriculum/content`, {
-			method: "GET",
-		});
-		if (res.status === 409) {
-			console.warn("Curriculum content not ready (409)", "CURRICULUM CONTENT CLIENT");
-			return false;
-		}
-		if (!res.ok) {
-			throw new Error(`Curriculum content sync failed (${res.status})`);
-		}
-		return true;
-	} catch (error) {
-		console.error(error, "CURRICULUM CONTENT CLIENT ERROR");
-		return false;
+async function retryProvision(serverId: string): Promise<void> {
+	const res = await fetch(`/api/servers/${serverId}/curriculum/retry-provision`, {
+		method: "POST",
+		credentials: "include",
+	});
+	if (!res.ok) {
+		const body: unknown = await res.json().catch(() => null);
+		const message =
+			body &&
+			typeof body === "object" &&
+			"message" in body &&
+			typeof (body as { message: unknown }).message === "string"
+				? (body as { message: string }).message
+				: `Retry failed (${res.status})`;
+		throw new Error(message);
 	}
 }
 
 export function CurriculumStatusBanner({
 	serverId,
 	initialStatus,
+	initialBootstrapPhase,
+	initialContentVersion,
 }: {
 	serverId: string;
 	initialStatus?: CurriculumLifecycleStatus | null;
+	initialBootstrapPhase?: string | null;
+	initialContentVersion?: number;
 }) {
 	const router = useRouter();
 	const [status, setStatus] = useState<CurriculumLifecycleStatus>(
 		initialStatus ?? "PENDING",
 	);
-	const [summary, setSummary] = useState<string | null>(null);
+	const [bootstrapPhase, setBootstrapPhase] = useState<string | null>(
+		initialBootstrapPhase ?? null,
+	);
+	const [contentVersion, setContentVersion] = useState(
+		initialContentVersion ?? 1,
+	);
 	const [error, setError] = useState<string | null>(null);
-	const [dismissed, setDismissed] = useState(initialStatus === "READY");
-	const [retryNonce, setRetryNonce] = useState(0);
+	const [dismissed, setDismissed] = useState(
+		initialStatus === "READY" && !initialBootstrapPhase,
+	);
+	const [retrying, setRetrying] = useState(false);
+	const contentVersionRef = useRef(contentVersion);
+	contentVersionRef.current = contentVersion;
+
+	const isEnriching = bootstrapPhase === "ENRICHING";
+	const isLegacyFailed = status === "FAILED";
 
 	useEffect(() => {
 		if (dismissed) return;
+		if (!isEnriching && !isLegacyFailed) return;
 
 		const controller = new AbortController();
 		let cancelled = false;
 
-		const markReady = async () => {
-			const synced = await loadReadyCurriculumContent(serverId);
-			if (cancelled) return;
-			setDismissed(true);
-			if (synced) router.refresh();
+		const applyLocal = (latest: LocalCurriculumStatus) => {
+			setStatus(latest.status);
+			setBootstrapPhase(latest.bootstrapPhase);
+			setContentVersion(latest.contentVersion);
+
+			if (
+				latest.contentVersion !== contentVersionRef.current &&
+				latest.status === "READY"
+			) {
+				invalidateRoadmapCache(serverId);
+				router.refresh();
+			}
+
+			if (latest.status === "READY" && !latest.bootstrapPhase) {
+				setDismissed(true);
+			}
 		};
 
-		const run = async () => {
+		const poll = async () => {
 			try {
-				let latest = await fetchCurriculum(serverId);
+				const latest = await fetchLocalCurriculumStatus(serverId);
 				if (cancelled) return;
-
-				setStatus(latest.status);
-				setSummary(latest.summary);
+				applyLocal(latest);
 				setError(null);
-
-				if (latest.status === "READY") {
-					await markReady();
-					return;
-				}
-
-				if (latest.status === "PENDING" || latest.status === "FAILED") {
-					try {
-						await bootstrapCurriculumRequest(serverId);
-						latest = await fetchCurriculum(serverId);
-						if (cancelled) return;
-						setStatus(latest.status);
-						setSummary(latest.summary);
-						if (latest.status === "READY") {
-							await markReady();
-							return;
-						}
-					} catch (bootError) {
-						if (!cancelled && latest.status === "PENDING") {
-							setError(
-								bootError instanceof Error
-									? bootError.message
-									: "Could not start curriculum generation",
-							);
-						}
-					}
-				}
-
-				while (
-					!cancelled &&
-					!controller.signal.aborted &&
-					!isTerminalCurriculumStatus(latest.status)
-				) {
-					await new Promise<void>((resolve, reject) => {
-						const timer = window.setTimeout(() => resolve(), POLL_MS);
-						controller.signal.addEventListener(
-							"abort",
-							() => {
-								window.clearTimeout(timer);
-								reject(new DOMException("Aborted", "AbortError"));
-							},
-							{ once: true },
-						);
-					});
-					latest = await fetchCurriculum(serverId);
-					if (cancelled) return;
-					setStatus(latest.status);
-					setSummary(latest.summary);
-					setError(null);
-					if (latest.status === "READY") {
-						await markReady();
-						return;
-					}
-				}
 			} catch (err) {
 				if (cancelled || controller.signal.aborted) return;
-				if (err instanceof DOMException && err.name === "AbortError") return;
 				setError(
-					err instanceof Error
-						? err.message
-						: "Could not load curriculum status",
+					err instanceof Error ? err.message : "Could not load curriculum status",
 				);
 			}
 		};
 
-		void run();
+		void poll();
+
+		const timer = window.setInterval(() => {
+			void poll();
+		}, ENRICH_POLL_MS);
+
+		controller.signal.addEventListener(
+			"abort",
+			() => {
+				window.clearInterval(timer);
+			},
+			{ once: true },
+		);
+
 		return () => {
 			cancelled = true;
 			controller.abort();
+			window.clearInterval(timer);
 		};
-	}, [serverId, dismissed, retryNonce, router]);
+	}, [serverId, dismissed, isEnriching, isLegacyFailed, router]);
 
-	const syncedReadyServer = useRef<string | null>(null);
-
-	// Already READY (e.g. returning user) — pull /content once per server for channels.
-	useEffect(() => {
-		if (initialStatus !== "READY") return;
-		if (syncedReadyServer.current === serverId) return;
-		syncedReadyServer.current = serverId;
-		void (async () => {
-			const synced = await loadReadyCurriculumContent(serverId);
-			if (synced) router.refresh();
-		})();
-	}, [initialStatus, serverId, router]);
-
-	const onRetry = () => {
-		setDismissed(false);
-		setStatus("PENDING");
+	const onRetry = async () => {
+		setRetrying(true);
 		setError(null);
-		setRetryNonce((n) => n + 1);
+		try {
+			await retryProvision(serverId);
+			invalidateRoadmapCache(serverId);
+			router.refresh();
+			setDismissed(true);
+		} catch (err) {
+			setError(err instanceof Error ? err.message : "Retry failed");
+		} finally {
+			setRetrying(false);
+		}
 	};
 
-	if (dismissed || status === "READY") {
+	if (dismissed || (status === "READY" && !bootstrapPhase)) {
 		return null;
 	}
 
-	const isFailed = status === "FAILED";
-	const isBusy = status === "PENDING" || status === "GENERATING";
-
-	return (
-		<div
-			className={cn(
-				"flex items-start gap-3 border-b px-4 py-3 text-sm",
-				isFailed
-					? "border-rose-200 bg-rose-50 text-rose-900"
-					: "border-[#D5E3E0] bg-[#E8F2F1] text-[#14201F]",
-			)}
-			role="status"
-			aria-live="polite"
-		>
-			{isBusy && (
-				<Loader2 className="mt-0.5 size-4 shrink-0 animate-spin text-[#0A4D4A]" />
-			)}
-			<div className="min-w-0 flex-1">
-				<p className="font-medium">
-					{isFailed
-						? "Curriculum generation failed"
-						: status === "GENERATING"
-							? "Building your learning roadmap…"
-							: "Starting curriculum generation…"}
-				</p>
-				<p className="mt-0.5 text-[#5C6B69]">
-					{error ??
-						summary ??
-						(isFailed
-							? "You can retry, or keep chatting while we sort this out."
-							: "This usually takes 30–60 seconds. You can keep using the group.")}
-				</p>
+	if (isEnriching) {
+		return (
+			<div
+				className="flex items-start gap-3 border-b border-[#D5E3E0] bg-[#E8F2F1] px-4 py-3 text-sm text-[#14201F]"
+				role="status"
+				aria-live="polite"
+			>
+				<Sparkles className="mt-0.5 size-4 shrink-0 text-[#0A4D4A]" />
+				<div className="min-w-0 flex-1">
+					<p className="font-medium">Enhancing your syllabus from your materials…</p>
+					<p className="mt-0.5 text-[#5C6B69]">
+						Your starter roadmap is ready — we&apos;re upgrading it in the
+						background. You can keep studying now.
+					</p>
+				</div>
+				<Loader2 className="size-4 shrink-0 animate-spin text-[#0A4D4A]" />
 			</div>
-			<div className="flex shrink-0 items-center gap-1">
-				{isFailed && (
+		);
+	}
+
+	if (isLegacyFailed) {
+		return (
+			<div
+				className="flex items-start gap-3 border-b border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-900"
+				role="status"
+				aria-live="polite"
+			>
+				<div className="min-w-0 flex-1">
+					<p className="font-medium">Curriculum setup failed</p>
+					<p className="mt-0.5 text-rose-800/80">
+						{error ?? "Tap Retry to rebuild your learning path."}
+					</p>
+				</div>
+				<div className="flex shrink-0 items-center gap-1">
 					<Button
 						type="button"
 						size="sm"
 						variant="outline"
 						className="h-8 border-rose-300 bg-white text-rose-900 hover:bg-rose-100"
-						onClick={onRetry}
+						onClick={() => void onRetry()}
+						disabled={retrying}
 					>
-						<RefreshCw className="mr-1.5 size-3.5" />
+						{retrying ? (
+							<Loader2 className="mr-1.5 size-3.5 animate-spin" />
+						) : (
+							<RefreshCw className="mr-1.5 size-3.5" />
+						)}
 						Retry
 					</Button>
-				)}
-				{isFailed && (
 					<Button
 						type="button"
 						size="icon"
@@ -224,8 +202,10 @@ export function CurriculumStatusBanner({
 					>
 						<X className="size-4" />
 					</Button>
-				)}
+				</div>
 			</div>
-		</div>
-	);
+		);
+	}
+
+	return null;
 }
