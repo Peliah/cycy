@@ -40,17 +40,17 @@ export async function initProfile() {
 	return newProfile;
 }
 
-/** Per-request dedupe for RSC trees (layout + sidebars). */
+/** Per-request dedupe for RSC trees (layout + sidebars). Session cookie only — no Clerk API round-trip. */
 export const getCurrentProfile = cache(async () => {
-	const user = await currentUser();
-	if (!user) {
+	const { userId } = await auth();
+	if (!userId) {
 		const { redirectToSignIn } = await auth();
 		return redirectToSignIn();
 	}
 
 	const profile = await prisma.profile.findUnique({
 		where: {
-			userId: user.id,
+			userId,
 		},
 	});
 	if (profile) return profile;

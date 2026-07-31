@@ -11,6 +11,7 @@ import {
 } from "@livekit/components-react";
 import "@livekit/components-styles";
 import { Track } from "livekit-client";
+import { StudyAiAssist } from "@/components/study-ai-assist";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -21,32 +22,53 @@ interface MediaRoomProps {
 	chatId: string;
 	video: boolean;
 	audio: boolean;
+	studyAssist?: boolean;
+	enableRecording?: boolean;
 }
 
-export function MediaRoom({ serverId, chatId, video, audio }: MediaRoomProps) {
+export function MediaRoom({
+	serverId,
+	chatId,
+	video,
+	audio,
+	studyAssist = false,
+	enableRecording = false,
+}: MediaRoomProps) {
 	const { user, isLoaded } = useUser();
 	const router = useRouter();
 	const [token, setToken] = useState("");
+	const [recordingStarted, setRecordingStarted] = useState(false);
 
 	useEffect(() => {
-		const name =
-			user?.fullName ||
-			user?.firstName ||
-			user?.lastName ||
-			user?.primaryEmailAddress?.emailAddress.split("@")[0];
-		if (!name) return;
+		if (!isLoaded || !user) return;
 		(async () => {
-			console.log("resp");
 			try {
-				const resp = await fetch(`/api/get-participant-token?room=${chatId}&username=${name}`);
-
-				const data = await resp.json();
-				setToken(data.token);
+				const params = new URLSearchParams({
+					room: chatId,
+					serverId,
+				});
+				const resp = await fetch(`/api/get-participant-token?${params.toString()}`);
+				if (!resp.ok) {
+					console.error("LiveKit token request failed", resp.status);
+					return;
+				}
+				const data = (await resp.json()) as { token?: string };
+				if (data.token) setToken(data.token);
 			} catch (e) {
 				console.error(e);
 			}
 		})();
-	}, [chatId, user?.firstName, user?.lastName, user?.fullName, user?.primaryEmailAddress?.emailAddress]);
+	}, [chatId, isLoaded, serverId, user]);
+
+	useEffect(() => {
+		if (!enableRecording || !token || recordingStarted) return;
+		setRecordingStarted(true);
+		void fetch("/api/livekit/start-recording", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ serverId, channelId: chatId, roomName: chatId }),
+		}).catch((error) => console.error("start-recording failed", error));
+	}, [chatId, enableRecording, recordingStarted, serverId, token]);
 
 	if (token === "" || !isLoaded) {
 		return (
@@ -73,10 +95,8 @@ export function MediaRoom({ serverId, chatId, video, audio }: MediaRoomProps) {
 		>
 			{/* Your custom component with basic video conferencing functionality. */}
 			<MyVideoConference />
-			{/* The RoomAudioRenderer takes care of room-wide audio for you. */}
 			<RoomAudioRenderer />
-			{/* Controls for the user to start/stop audio, video, and screen
-      share tracks and to leave the room. */}
+			{studyAssist && audio ? <StudyAiAssist serverId={serverId} channelId={chatId} /> : null}
 			<ControlBar />
 		</LiveKitRoom>
 	);
