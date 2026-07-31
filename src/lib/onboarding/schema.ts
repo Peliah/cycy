@@ -25,7 +25,7 @@ export const createGroupSchema = z.object({
 	imageUrl: z.string().url().optional().or(z.literal("")),
 	learningGoal: z.string().min(1, "Describe what you want to learn"),
 	learningReason: learningReasonSchema,
-	materials: z.array(learningMaterialSchema).default([]),
+	materials: z.array(learningMaterialSchema),
 });
 
 export const joinGroupSchema = z.object({
