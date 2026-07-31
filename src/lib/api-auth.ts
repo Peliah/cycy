@@ -9,7 +9,7 @@ export type ApiProfile = {
 
 /**
  * Lightweight auth for Route Handlers — uses session cookie only (no Clerk API round-trip).
- * Prefer this over getCurrentProfile() in polled APIs like curriculum/status.
+ * Prefer this over calling Clerk's currentUser() in hot paths.
  */
 export async function getApiProfile(): Promise<ApiProfile | null> {
 	const { userId } = await auth();
