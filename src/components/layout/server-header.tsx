@@ -8,8 +8,8 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useStore } from "@/store/store";
-import { ServerWithMembersWithProfiles } from "@/types/server";
-import { MemberRole } from "@prisma/client";
+import type { ServerWithMembersWithProfiles } from "@/types/server";
+import { MemberRole } from "@/lib/db-enums";
 import {
 	ChevronDown,
 	LogOut,

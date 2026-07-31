@@ -3,7 +3,7 @@
 import { ActionTooltip } from "@/components/ui/action-tooltip";
 import { useStore } from "@/store/store";
 import type { ServerWithMembersWithProfiles } from "@/types/server";
-import { ChannelType, MemberRole } from "@prisma/client";
+import { ChannelType, MemberRole } from "@/lib/db-enums";
 import { Plus, Settings } from "lucide-react";
 
 interface ServerSectionProps {

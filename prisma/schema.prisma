@@ -45,6 +45,7 @@ model Server {
   materials      LearningMaterial[]
   curriculum     Curriculum?
   learningSessions LearningSession[]
+  callTranscripts  CallTranscript[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -89,6 +90,7 @@ model Channel {
   moduleStatus     ModuleProgressStatus?
   moduleOrder      Int?
   messages         Message[]
+  callTranscripts  CallTranscript[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -96,6 +98,36 @@ model Channel {
   @@unique([serverId, externalModuleId])
   @@index([profileId])
   @@index([serverId])
+}
+
+enum CallTranscriptStatus {
+  PENDING
+  RECORDING
+  TRANSCRIBING
+  READY
+  FAILED
+}
+
+model CallTranscript {
+  id           String               @id @default(cuid())
+  serverId     String
+  server       Server               @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  channelId    String?
+  channel      Channel?             @relation(fields: [channelId], references: [id], onDelete: SetNull)
+  roomName     String
+  profileId    String?
+  egressId     String?
+  recordingUrl String?              @db.Text
+  transcript   String?              @db.Text
+  summary      String?              @db.Text
+  status       CallTranscriptStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([serverId])
+  @@index([channelId])
+  @@index([roomName])
 }
 
 model Message {
