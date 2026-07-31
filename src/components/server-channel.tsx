@@ -1,14 +1,13 @@
 "use client";
 
 import { ActionTooltip } from "@/components/ui/action-tooltip";
-import { cn } from "@/lib/utils";
 import {
-	Channel,
 	ChannelType,
 	MemberRole,
 	ModuleProgressStatus,
-	Server,
-} from "@prisma/client";
+} from "@/lib/db-enums";
+import { cn } from "@/lib/utils";
+import type { Channel, Server } from "@prisma/client";
 import {
 	BookOpen,
 	CheckCircle2,

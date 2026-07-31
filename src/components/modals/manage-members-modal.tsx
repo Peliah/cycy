@@ -15,8 +15,8 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { UserAvatar } from "@/components/user/user-avatar";
 import { useStore } from "@/store/store";
-import { ServerWithMembersWithProfiles } from "@/types/server";
-import { MemberRole } from "@prisma/client";
+import type { ServerWithMembersWithProfiles } from "@/types/server";
+import { MemberRole } from "@/lib/db-enums";
 import axios from "axios";
 import { Check, Gavel, Loader2, MoreVertical, Shield, ShieldAlert, ShieldCheck, ShieldQuestion } from "lucide-react";
 import { useRouter } from "next/navigation";

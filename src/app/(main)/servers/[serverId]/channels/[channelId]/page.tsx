@@ -210,7 +210,14 @@ export default async function ChannelIdPage({ params }: ChannelIdPageProps) {
 				chatBlock
 			) : null}
 			{channel.type === ChannelType.AUDIO && (
-				<MediaRoom chatId={channel.id} serverId={serverId} video={false} audio={true} />
+				<MediaRoom
+					chatId={channel.id}
+					serverId={serverId}
+					video={false}
+					audio={true}
+					studyAssist
+					enableRecording
+				/>
 			)}
 			{channel.type === ChannelType.VIDEO && (
 				<MediaRoom chatId={channel.id} serverId={serverId} video={true} audio={true} />
